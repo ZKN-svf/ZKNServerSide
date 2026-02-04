@@ -1,126 +1,2502 @@
---[[
-    ZKN ServerSide - MainModule (Persistência e Sincronização)
-    Suporte para require(ID):Init()
-]]
-
-local MainModule = {}
-
--- URL da sua database (A mesma que você usa no painel HTML)
-MainModule.FirebaseURL = "https://zkn-ss-default-rtdb.firebaseio.com/" 
-
-function MainModule:Init(customUrl)
-    if customUrl then self.FirebaseURL = customUrl end
-
-    local HttpService = game:GetService("HttpService")
-    local Players = game:GetService("Players")
-    local MarketplaceService = game:GetService("MarketplaceService")
-
-    -- Módulos de VM internos
-    local VLuau = script:FindFirstChild("VLuau")
-    local FiOne = script:FindFirstChild("FiOne")
-
-    -- Usa JobId para identificar a instância ou "STUDIO" se estiver testando
-    local ServerId = game.JobId ~= "" and game.JobId or "STUDIO_TEST"
-    
-    local Endpoints = {
-        Server = self.FirebaseURL .. "servers/" .. ServerId .. ".json",
-        Command = self.FirebaseURL .. "commands/" .. ServerId .. ".json"
-    }
-
-    local function ExecuteLua(code)
-        task.spawn(function()
-            local success, err = pcall(function()
-                if VLuau then
-                    local vm = require(VLuau)
-                    local loadstring = (type(vm) == "table" and vm.loadstring) or vm
-                    loadstring(code)()
-                elseif FiOne then
-                    local vm = require(FiOne)
-                    if type(vm) == "table" and vm.Init then
-                        vm.Init(code)()
-                    else
-                        vm(code)
-                    end
-                else
-                    loadstring(code)()
-                end
-            end)
-            if not success then warn("[ZKN SS] Erro na VM: " .. tostring(err)) end
-        end)
-    end
-
-    local function UpdateData()
-        local success, gameInfo = pcall(function()
-            return MarketplaceService:GetProductInfo(game.PlaceId)
-        end)
-
-        -- Coleta dados essenciais para o Painel HTML
-        local data = {
-            gameName = success and gameInfo.Name or "Jogo Roblox",
-            placeId = game.PlaceId,
-            players = #Players:GetPlayers(),
-            maxPlayers = Players.MaxPlayers,
-            lastActive = { [".sv"] = "timestamp" },
-            -- Gera o link da imagem do jogo
-            thumbnail = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. game.PlaceId .. "&width=420&height=420&format=png"
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZKN ServerSide Premium - made by @fr_zkn</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --primary-darker: #5b21b6;
+            --primary-light: #a78bfa;
+            --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            --secondary: #a855f7;
+            --success: #10b981;
+            --success-light: #34d399;
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --danger: #ef4444;
+            --danger-light: #f87171;
+            --admin: #f59e0b;
+            --admin-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --user: #10b981;
+            --user-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --dark: #0a0618;
+            --darker: #070411;
+            --dark-card: rgba(18, 13, 42, 0.92);
+            --dark-hover: rgba(28, 22, 62, 0.95);
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text: #f8fafc;
+            --text-light: #e2e8f0;
+            --text-lighter: #94a3b8;
+            --border: rgba(139, 92, 246, 0.35);
+            --border-light: rgba(139, 92, 246, 0.25);
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.45);
+            --shadow-xl: rgba(0, 0, 0, 0.6);
+            --online: #10b981;
+            --offline: #6b7280;
+            --recent: #8b5cf6;
+            --whitelist: #10b981;
+            --blur: blur(24px);
+            --glow: 0 0 40px rgba(139, 92, 246, 0.3);
         }
-
-        pcall(function()
-            HttpService:RequestAsync({
-                Url = Endpoints.Server,
-                Method = "PATCH",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode(data)
-            })
-        end)
-    end
-
-    -- Loop de monitoramento (Checa comandos e atualiza status)
-    task.spawn(function()
-        while true do
-            local success, response = pcall(function()
-                return HttpService:GetAsync(Endpoints.Command .. "?nocache=" .. tick())
-            end)
-
-            if success and response ~= "null" then
-                local cmdData = HttpService:JSONDecode(response)
-                if cmdData and cmdData.script and cmdData.script ~= "" then
-                    -- Limpa o comando no Firebase após ler
-                    pcall(function()
-                        HttpService:RequestAsync({
-                            Url = Endpoints.Command,
-                            Method = "PATCH",
-                            Headers = {["Content-Type"] = "application/json"},
-                            Body = HttpService:JSONEncode({ script = "" })
-                        })
-                    end)
-                    ExecuteLua(cmdData.script)
-                end
-            end
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        body {
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(91, 33, 182, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(167, 139, 250, 0.08) 0%, transparent 50%);
+        }
+        
+        /* Background effects */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .bg-effect {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.2;
+            animation: float 25s ease-in-out infinite;
+        }
+        
+        .bg-effect:nth-child(1) {
+            width: 900px;
+            height: 900px;
+            top: -400px;
+            left: -300px;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            animation-delay: 0s;
+        }
+        
+        .bg-effect:nth-child(2) {
+            width: 700px;
+            height: 700px;
+            bottom: -300px;
+            right: -200px;
+            background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+            animation-delay: -7s;
+        }
+        
+        .bg-effect:nth-child(3) {
+            width: 500px;
+            height: 500px;
+            top: 40%;
+            left: 75%;
+            background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+            animation-delay: -14s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            25% { transform: translate(40px, -40px) scale(1.05) rotate(2deg); }
+            50% { transform: translate(-30px, 30px) scale(0.95) rotate(-1deg); }
+            75% { transform: translate(20px, 20px) scale(1.02) rotate(1deg); }
+        }
+        
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: var(--dark-card);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 52px 44px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: var(--shadow-xl), var(--glow);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            animation: cardEntrance 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0.08));
+            z-index: -1;
+            border-radius: 28px;
+        }
+        
+        .login-card::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            height: 6px;
+            background: var(--primary-gradient);
+            border-radius: 28px 28px 0 0;
+        }
+        
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 44px;
+        }
+        
+        .login-title {
+            font-size: 40px;
+            font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 14px;
+            letter-spacing: -0.8px;
+            position: relative;
+            display: inline-block;
+            text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .login-title::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 5px;
+            background: var(--primary-gradient);
+            border-radius: 3px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        
+        .login-subtitle {
+            color: var(--text-light);
+            font-size: 17px;
+            font-weight: 500;
+            line-height: 1.7;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+        
+        .login-subtitle strong {
+            color: var(--primary-light);
+            font-weight: 700;
+        }
+        
+        .input-group {
+            margin-bottom: 32px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 12px;
+            color: var(--text-light);
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid var(--border-light);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.2), var(--glow);
+        }
+        
+        .input-field::placeholder {
+            color: var(--text-lighter);
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 20px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 16px;
+            letter-spacing: 0.8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.4);
+        }
+        
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.6s;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5), var(--glow);
+        }
+        
+        .login-button:hover::before {
+            left: 100%;
+        }
+        
+        .login-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .role-info {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 28px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .role-info h4 {
+            color: var(--primary-light);
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .role-info p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+        
+        .role-info p strong {
+            color: var(--primary-light);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 36px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-light);
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        
+        .dashboard.show {
+            opacity: 1;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--dark-card);
+            backdrop-filter: var(--blur);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 32px;
+            height: 88px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139, 92, 246, 0.18);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
+            font-size: 24px;
+            font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.6px;
+            text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .logo-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .user-badge {
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 0.4px;
+            box-shadow: 0 6px 24px var(--shadow);
+            border: 1px solid;
+        }
+        
+        .user-badge.admin {
+            background: var(--admin-gradient);
+            color: white;
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        
+        .user-badge.user {
+            background: var(--user-gradient);
+            color: white;
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.1);
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2.5s infinite;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8);
+            }
+            50% { 
+                opacity: 0.9; 
+                transform: scale(1.1);
+                box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+            }
+        }
+        
+        .logout-button {
+            background: rgba(239, 68, 68, 0.18);
+            color: var(--danger-light);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.1);
+        }
+        
+        .logout-button:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            max-width: 1800px;
+            margin: 0 auto;
+            min-height: calc(100vh - 88px - 100px); /* Altura da tela menos header e footer */
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--dark-card);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--primary-gradient);
+            border-radius: 24px 24px 0 0;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px) scale(1.005);
+            box-shadow: 0 32px 64px var(--shadow-lg), var(--glow);
+            border-color: rgba(139, 92, 246, 0.6);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        
+        .card-icon {
+            font-size: 24px;
+            color: var(--primary-light);
+            background: rgba(139, 92, 246, 0.18);
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+        }
+        
+        .card-title-text h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.4px;
+        }
+        
+        .card-title-text p {
+            font-size: 15px;
+            color: var(--text-light);
+            margin-top: 6px;
+            opacity: 0.9;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px;
+            border-radius: 16px;
+            margin-bottom: 28px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 16px;
+            background: transparent;
+            border: none;
+            border-radius: 12px;
+            color: var(--text-light);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+        
+        .tab.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        /* Tables */
+        .table-container {
+            max-height: 480px;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .table-container::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+        
+        .server-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 16px;
+        }
+        
+        .server-table thead {
+            position: sticky;
+            top: 0;
+            background: rgba(18, 13, 42, 0.98);
+            backdrop-filter: var(--blur);
+            z-index: 10;
+        }
+        
+        .server-table th {
+            padding: 20px 24px;
+            text-align: left;
+            color: var(--text-light);
+            font-weight: 800;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .server-table td {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .server-table tbody tr {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .server-table tbody tr:hover {
+            background: rgba(139, 92, 246, 0.12);
+            transform: translateX(8px);
+        }
+        
+        .server-table tbody tr.selected {
+            background: rgba(139, 92, 246, 0.2);
+            border-left: 5px solid var(--primary);
+            box-shadow: inset 4px 0 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .server-info {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        
+        .server-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+        }
+        
+        .server-icon:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+        }
+        
+        .server-details {
+            flex: 1;
+        }
+        
+        .server-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .server-id {
+            font-size: 14px;
+            color: var(--text-lighter);
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .player-count {
+            font-weight: 800;
+            color: var(--primary-light);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.4px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status-online {
+            background: rgba(16, 185, 129, 0.25);
+            color: var(--success-light);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-offline {
+            background: rgba(107, 114, 128, 0.25);
+            color: var(--text-lighter);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+        }
+        
+        .select-button {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary-light);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
+        }
+        
+        .select-button:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
+        }
+        
+        .enter-button {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-light);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+        }
+        
+        .enter-button:hover {
+            background: var(--user-gradient);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 28px;
+        }
+        
+        .stat-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 0;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), var(--glow);
+            border-color: var(--primary);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 0.15;
+        }
+        
+        .stat-value {
+            font-size: 44px;
+            font-weight: 900;
+            color: var(--primary-light);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            z-index: 1;
+            font-weight: 700;
+        }
+        
+        /* Script Editor */
+        .script-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .script-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        
+        .script-badges {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .script-badge {
+            background: rgba(245, 158, 11, 0.25);
+            color: var(--warning-light);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+        }
+        
+        .script-editor {
+            flex: 1;
+            min-height: 360px;
+            background: rgba(10, 8, 26, 0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 28px;
+            font-family: 'Consolas', 'Monaco', 'JetBrains Mono', monospace;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #00ff9d;
+            resize: none;
+            margin-bottom: 28px;
+            transition: all 0.4s ease;
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .script-editor:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.25), 
+                        inset 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .script-editor::placeholder {
+            color: rgba(0, 255, 157, 0.6);
+            font-style: italic;
+        }
+        
+        .execution-controls {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        
+        .server-select {
+            flex: 1;
+            padding: 16px 22px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.4s ease;
+        }
+        
+        .server-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.2);
+        }
+        
+        .execute-button {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            padding: 16px 40px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 0.8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.4);
+        }
+        
+        .execute-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.6s;
+        }
+        
+        .execute-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5), var(--glow);
+        }
+        
+        .execute-button:hover::before {
+            left: 100%;
+        }
+        
+        .script-actions {
+            display: flex;
+            gap: 18px;
+        }
+        
+        .action-button {
+            flex: 1;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: 1px solid transparent;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .action-button.refresh {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary-light);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        
+        .action-button.clear {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-light);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-3px);
+        }
+        
+        .action-button.refresh:hover {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
+        }
+        
+        .action-button.clear:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Whitelist */
+        .whitelist-form {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+        
+        .whitelist-input {
+            flex: 1;
+            padding: 16px 22px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.4s ease;
+        }
+        
+        .whitelist-input:focus {
+            outline: none;
+            border-color: var(--success);
+            box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.2);
+        }
+        
+        .whitelist-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .add-button {
+            background: var(--user-gradient);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            padding: 16px 32px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+        }
+        
+        .add-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.6s;
+        }
+        
+        .add-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.5);
+        }
+        
+        .add-button:hover::before {
+            left: 100%;
+        }
+        
+        .add-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .add-button:disabled:hover::before {
+            left: -100%;
+        }
+        
+        .whitelist-list {
+            max-height: 360px;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .whitelist-item {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .whitelist-item:hover {
+            background: rgba(16, 185, 129, 0.22);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+        }
+        
+        .whitelist-info {
+            flex: 1;
+        }
+        
+        .whitelist-id {
+            font-weight: 800;
+            color: var(--success-light);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 18px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        
+        .whitelist-date {
+            font-size: 14px;
+            color: var(--text-light);
+            opacity: 0.9;
+        }
+        
+        .remove-button {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-light);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+        }
+        
+        .remove-button:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.4);
+        }
+        
+        .remove-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .remove-button:disabled:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-light);
+        }
+        
+        /* Permission Warning */
+        .permission-warning {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: shake 0.6s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        
+        .permission-warning i {
+            color: var(--warning-light);
+            font-size: 24px;
+        }
+        
+        .permission-warning p {
+            font-size: 15px;
+            color: var(--warning-light);
+            font-weight: 700;
+        }
+        
+        /* System Info */
+        .system-info {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 32px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .system-info h4 {
+            color: var(--primary-light);
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+        
+        .system-info p {
+            font-size: 15px;
+            color: var(--text-light);
+            line-height: 1.9;
+            margin-bottom: 16px;
+            padding-left: 10px;
+            border-left: 4px solid rgba(139, 92, 246, 0.6);
+            padding-left: 20px;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px 32px;
+            color: var(--text-light);
+            font-size: 14px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(10, 7, 29, 0.9);
+            backdrop-filter: var(--blur);
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.3);
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .footer-main {
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 8px;
+        }
+        
+        .footer-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .footer-link:hover {
+            color: var(--primary-light);
+            opacity: 1;
+        }
+        
+        .footer-separator {
+            color: var(--text-lighter);
+            opacity: 0.5;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 110px;
+            right: 32px;
+            padding: 20px 26px;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            z-index: 1000;
+            animation: slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-left: 6px solid;
+            backdrop-filter: var(--blur);
+            border: 1px solid;
+        }
+        
+        .toast.success {
+            background: rgba(16, 185, 129, 0.95);
+            border-left-color: #059669;
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        
+        .toast.warning {
+            background: rgba(245, 158, 11, 0.95);
+            border-left-color: #d97706;
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+        
+        .toast.error {
+            background: rgba(239, 68, 68, 0.95);
+            border-left-color: #dc2626;
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        .toast.info {
+            background: rgba(139, 92, 246, 0.95);
+            border-left-color: #7c3aed;
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                min-height: calc(100vh - 88px - 120px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 24px;
+                height: auto;
+                flex-direction: column;
+                padding: 20px 24px;
+                gap: 20px;
+            }
             
-            UpdateData()
-            task.wait(5) -- Sincroniza a cada 5 segundos
-        end
-    end)
+            .header-left, .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .main-content {
+                padding: 24px;
+                gap: 24px;
+                min-height: calc(100vh - auto - 140px);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .server-table th,
+            .server-table td {
+                padding: 16px 20px;
+            }
+            
+            .execution-controls,
+            .whitelist-form {
+                flex-direction: column;
+            }
+            
+            .card {
+                padding: 24px;
+            }
+            
+            .login-card {
+                padding: 40px 28px;
+            }
+            
+            .footer {
+                padding: 20px 24px;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .footer-separator {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 20px;
+                min-height: calc(100vh - auto - 160px);
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .server-table th,
+            .server-table td {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+            
+            .server-icon {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .footer {
+                padding: 16px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-effects">
+        <div class="bg-effect"></div>
+        <div class="bg-effect"></div>
+        <div class="bg-effect"></div>
+    </div>
+    
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="login-header">
+                <h1 class="login-title">ZKN ServerSide Premium</h1>
+                <p class="login-subtitle">Sistema de Controle Administrativo com Permissões Hierárquicas</p>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">
+                    <i class="fas fa-key"></i>
+                    Senha de Acesso
+                </label>
+                <input type="password" class="input-field" id="password" placeholder="Digite a senha de acesso">
+            </div>
+            
+            <button class="login-button" onclick="checkPassword()">
+                <i class="fas fa-sign-in-alt"></i> ACESSAR PAINEL
+            </button>
+            
+            <div class="role-info">
+                <h4><i class="fas fa-user-shield"></i> Níveis de Permissão</h4>
+                <p><strong>Admin (ZKN9999):</strong> Acesso total, pode gerenciar whitelist</p>
+                <p><strong>Usuário (40028922ZKN):</strong> Acesso limitado, não pode alterar whitelist</p>
+            </div>
+            
+            <div class="login-footer">
+                Sistema premium com controle hierárquico - Sigeon Pex Edition v2.0
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="logo-text">
+                        <div class="logo-title">ZKN ServerSide</div>
+                        <div class="logo-subtitle" id="roleDisplay">Carregando...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="user-badge" id="userBadge">
+                    <i class="fas fa-user"></i>
+                    <span id="userRole">Carregando...</span>
+                </div>
+                
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="connectionStatusText">Conectado</span>
+                </div>
+                
+                <button class="logout-button" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> SAIR
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Column -->
+            <div class="left-column">
+                <!-- Servers Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <div class="card-title-text">
+                                <h3>Controle de Servidores</h3>
+                                <p>Monitore e gerencie servidores ativos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('online')">Online</button>
+                        <button class="tab" onclick="switchTab('recent')">Recentes</button>
+                        <button class="tab" onclick="switchTab('all')">Todos</button>
+                    </div>
+                    
+                    <!-- Online Servers -->
+                    <div class="tab-content active" id="online-tab">
+                        <div class="table-container">
+                            <table class="server-table">
+                                <thead>
+                                    <tr>
+                                        <th>Servidor</th>
+                                        <th>Jogadores</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="serverList">
+                                    <!-- Servidores serão carregados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Servers -->
+                    <div class="tab-content" id="recent-tab">
+                        <div class="table-container">
+                            <table class="server-table">
+                                <thead>
+                                    <tr>
+                                        <th>Servidor</th>
+                                        <th>Jogadores</th>
+                                        <th>Status</th>
+                                        <th>Última Atividade</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentServerList">
+                                    <!-- Servidores recentes serão carregados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- All Servers -->
+                    <div class="tab-content" id="all-tab">
+                        <div class="table-container">
+                            <table class="server-table">
+                                <thead>
+                                    <tr>
+                                        <th>Servidor</th>
+                                        <th>Jogadores</th>
+                                        <th>Status</th>
+                                        <th>Última Atividade</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allServerList">
+                                    <!-- Todos os servidores serão carregados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="activeServersCount">0</div>
+                            <div class="stat-label">Servidores Ativos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalPlayersCount">0</div>
+                            <div class="stat-label">Jogadores Online</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="whitelistCount">0</div>
+                            <div class="stat-label">Whitelist</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Info -->
+                <div class="system-info">
+                    <h4><i class="fas fa-info-circle"></i> Informações do Sistema</h4>
+                    <p>• Scripts são executados via VLuau.loadstring() com bypass</p>
+                    <p>• Whitelist obrigatória para execução de comandos</p>
+                    <p>• Permissões hierárquicas: Admin e Usuário</p>
+                    <p>• Sincronização automática a cada 5 segundos</p>
+                    <p>• Sistema seguro com verificação em tempo real</p>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="right-column">
+                <!-- Script Executor -->
+                <div class="card script-container">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">
+                                <i class="fas fa-terminal"></i>
+                            </div>
+                            <div class="card-title-text">
+                                <h3>Executor de Código</h3>
+                                <p>Execute scripts Lua remotamente</p>
+                            </div>
+                        </div>
+                        <div class="script-badges">
+                            <span class="script-badge">VLuau Bypass</span>
+                        </div>
+                    </div>
+                    
+                    <textarea class="script-editor" id="scriptBox" placeholder="-- Digite seu código Lua aqui
+-- Exemplo: require(119467537742604).ZKN('username')
+"></textarea>
+                    
+                    <div class="execution-controls">
+                        <select class="server-select" id="serverSelect">
+                            <option value="">Selecione um servidor</option>
+                        </select>
+                        <button class="execute-button" onclick="sendExecution()">
+                            <i class="fas fa-play"></i> EXECUTAR
+                        </button>
+                    </div>
+                    
+                    <div class="script-actions">
+                        <button class="action-button refresh" onclick="refreshServers()">
+                            <i class="fas fa-sync-alt"></i> ATUALIZAR
+                        </button>
+                        <button class="action-button clear" onclick="clearScript()">
+                            <i class="fas fa-trash"></i> LIMPAR
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Whitelist -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <div class="card-title-text">
+                                <h3>Whitelist de Jogadores</h3>
+                                <p id="whitelistPermissionText">Gerencie acesso ao executor</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Permission Warning (shown for non-admin users) -->
+                    <div class="permission-warning" id="permissionWarning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Você não tem permissão para gerenciar a whitelist. Apenas administradores podem modificar.</p>
+                    </div>
+                    
+                    <div class="whitelist-form">
+                        <input type="text" class="whitelist-input" id="whitelistInput" placeholder="Digite o UserID do jogador">
+                        <button class="add-button" id="addWhitelistBtn" onclick="addToWhitelist()">
+                            <i class="fas fa-plus"></i> ADICIONAR
+                        </button>
+                    </div>
+                    
+                    <div class="whitelist-list" id="whitelistList">
+                        <!-- Whitelist será carregada aqui -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-main">
+                    ZKN ServerSide Premium © 2023 - Sistema de Controle Hierárquico
+                </div>
+                <div class="footer-links">
+                    <span class="footer-link">
+                        <i class="fas fa-wifi"></i>
+                        <span id="connectionStatus">Conectado ao Firebase</span>
+                    </span>
+                    <span class="footer-separator">|</span>
+                    <span class="footer-link">
+                        <i class="fas fa-clock"></i>
+                        Última atualização: <span id="lastUpdate">--:--:--</span>
+                    </span>
+                    <span class="footer-separator">|</span>
+                    <span class="footer-link">
+                        <i class="fas fa-user-tag"></i>
+                        Usuário: <span id="footerUserRole">Carregando...</span>
+                    </span>
+                </div>
+            </div>
+        </footer>
+    </div>
 
-    -- Ao fechar o servidor, ele NÃO deleta o registro.
-    -- Apenas marca como 0 jogadores e Offline para o Painel.
-    game:BindToClose(function()
-        pcall(function()
-            HttpService:RequestAsync({ 
-                Url = Endpoints.Server, 
-                Method = "PATCH",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({ 
-                    players = 0,
-                    status = "offline" 
-                }) 
-            })
-        end)
-    end)
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            databaseURL: "https://zkn-ss-default-rtdb.firebaseio.com/"
+        };
 
-    print("[ZKN SS] Sistema Inicializado. Sincronizando com: " .. self.FirebaseURL)
-    return self
-end
-
-return MainModule
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Global Variables
+        let servers = {};
+        let whitelist = {};
+        let currentUserRole = null; // 'admin' or 'user'
+        let currentTab = 'online';
+        let selectedServerId = null;
+        
+        // Login Function
+        function checkPassword() {
+            const password = document.getElementById('password').value;
+            const loginScreen = document.getElementById('loginScreen');
+            const dashboard = document.getElementById('dashboard');
+            
+            if (password === "ZKN9999") {
+                // Admin access
+                currentUserRole = 'admin';
+                successfulLogin(loginScreen, dashboard, "Administrador");
+            } else if (password === "40028922ZKN") {
+                // User access
+                currentUserRole = 'user';
+                successfulLogin(loginScreen, dashboard, "Usuário");
+            } else {
+                showToast("Senha incorreta. Tente novamente.", "error");
+                document.getElementById('password').style.borderColor = 'var(--danger)';
+                document.getElementById('password').style.boxShadow = '0 0 0 5px rgba(239, 68, 68, 0.2), var(--glow)';
+                
+                setTimeout(() => {
+                    document.getElementById('password').style.borderColor = '';
+                    document.getElementById('password').style.boxShadow = '';
+                }, 1000);
+            }
+        }
+        
+        function successfulLogin(loginScreen, dashboard, roleName) {
+            // Smooth transition
+            loginScreen.style.opacity = '0';
+            loginScreen.style.transform = 'translateY(-30px) scale(0.9)';
+            
+            setTimeout(() => {
+                loginScreen.style.display = 'none';
+                dashboard.style.display = 'block';
+                
+                setTimeout(() => {
+                    dashboard.classList.add('show');
+                    initializeDashboard(roleName);
+                }, 50);
+            }, 350);
+            
+            showToast(`Bem-vindo, ${roleName}!`, "success");
+        }
+        
+        // Logout Function
+        function logout() {
+            const dashboard = document.getElementById('dashboard');
+            const loginScreen = document.getElementById('loginScreen');
+            
+            dashboard.classList.remove('show');
+            
+            setTimeout(() => {
+                dashboard.style.display = 'none';
+                loginScreen.style.display = 'flex';
+                
+                setTimeout(() => {
+                    loginScreen.style.opacity = '1';
+                    loginScreen.style.transform = 'translateY(0) scale(1)';
+                    document.getElementById('password').value = '';
+                    currentUserRole = null;
+                }, 50);
+            }, 350);
+            
+            showToast("Sessão encerrada", "info");
+        }
+        
+        // Initialize Dashboard
+        function initializeDashboard(roleName) {
+            // Update UI based on role
+            updateRoleUI(roleName);
+            
+            // Load whitelist
+            loadWhitelist();
+            
+            // Start server monitoring
+            monitorServers();
+            
+            // Update time
+            setInterval(() => {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('pt-BR');
+                document.getElementById('lastUpdate').textContent = timeString;
+            }, 1000);
+            
+            // Check permission for whitelist
+            setupWhitelistPermissions();
+        }
+        
+        // Update UI based on user role
+        function updateRoleUI(roleName) {
+            // Update badge
+            const userBadge = document.getElementById('userBadge');
+            const userRole = document.getElementById('userRole');
+            const roleDisplay = document.getElementById('roleDisplay');
+            const footerUserRole = document.getElementById('footerUserRole');
+            
+            userRole.textContent = roleName;
+            roleDisplay.textContent = `Acesso: ${roleName}`;
+            footerUserRole.textContent = roleName;
+            
+            if (currentUserRole === 'admin') {
+                userBadge.className = 'user-badge admin';
+                userBadge.innerHTML = '<i class="fas fa-crown"></i> ADMINISTRADOR';
+            } else {
+                userBadge.className = 'user-badge user';
+                userBadge.innerHTML = '<i class="fas fa-user"></i> USUÁRIO';
+            }
+        }
+        
+        // Setup whitelist permissions based on role
+        function setupWhitelistPermissions() {
+            const permissionWarning = document.getElementById('permissionWarning');
+            const addButton = document.getElementById('addWhitelistBtn');
+            const whitelistInput = document.getElementById('whitelistInput');
+            const permissionText = document.getElementById('whitelistPermissionText');
+            
+            if (currentUserRole === 'admin') {
+                // Admin can manage whitelist
+                permissionWarning.style.display = 'none';
+                addButton.disabled = false;
+                whitelistInput.disabled = false;
+                permissionText.textContent = 'Gerencie acesso ao executor (Admin)';
+                permissionText.style.color = 'var(--admin)';
+            } else {
+                // User cannot manage whitelist
+                permissionWarning.style.display = 'flex';
+                addButton.disabled = true;
+                whitelistInput.disabled = true;
+                permissionText.textContent = 'Acesso somente leitura (Usuário)';
+                permissionText.style.color = 'var(--user)';
+            }
+        }
+        
+        // Switch Tabs
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Show corresponding content
+            document.getElementById(tabId + '-tab').classList.add('active');
+            
+            // Update server tables
+            updateServerTable();
+        }
+        
+        // Load Whitelist
+        function loadWhitelist() {
+            database.ref('whitelist').on('value', (snapshot) => {
+                whitelist = snapshot.val() || {};
+                updateWhitelistDisplay();
+                updateStats();
+            });
+        }
+        
+        // Monitor Servers
+        function monitorServers() {
+            database.ref('servers').on('value', (snapshot) => {
+                servers = snapshot.val() || {};
+                updateServerTable();
+                updateServerSelect();
+                showToast("Servidores atualizados", "success");
+            });
+        }
+        
+        // Update Server Select dropdown
+        function updateServerSelect() {
+            const serverSelect = document.getElementById('serverSelect');
+            const currentSelection = serverSelect ? serverSelect.value : '';
+            
+            // Clear dropdown
+            if (serverSelect) {
+                serverSelect.innerHTML = '<option value="">Selecione um servidor</option>';
+            }
+            
+            // Add online servers to dropdown
+            for (const [serverId, server] of Object.entries(servers)) {
+                if (!server) continue;
+                
+                const timeDiff = Date.now() - (server.lastActive || 0);
+                const isOnline = timeDiff < 15000; // 15 seconds tolerance
+                
+                if (isOnline && serverSelect) {
+                    const option = document.createElement('option');
+                    option.value = serverId;
+                    option.textContent = `${serverId.substring(0, 8)}... (${server.players || 0}/${server.maxPlayers || 0} jogadores)`;
+                    serverSelect.appendChild(option);
+                }
+            }
+            
+            // Restore selection
+            if (serverSelect && currentSelection) {
+                serverSelect.value = currentSelection;
+            }
+        }
+        
+        // Update Server Table
+        function updateServerTable() {
+            const serverList = document.getElementById('serverList');
+            const recentServerList = document.getElementById('recentServerList');
+            const allServerList = document.getElementById('allServerList');
+            
+            // Clear tables
+            serverList.innerHTML = '';
+            recentServerList.innerHTML = '';
+            allServerList.innerHTML = '';
+            
+            const now = Date.now();
+            let activeCount = 0;
+            let totalPlayers = 0;
+            
+            // Process all servers
+            for (const [id, server] of Object.entries(servers)) {
+                if (!server) continue;
+                
+                const timeDiff = now - (server.lastActive || 0);
+                const isOnline = timeDiff < 15000; // 15 segundos
+                const isRecent = timeDiff < 300000; // 5 minutos
+                
+                // Count stats
+                if (isOnline) {
+                    activeCount++;
+                    totalPlayers += server.players || 0;
+                }
+                
+                // Create row data
+                const rowData = createServerRow(id, server, timeDiff, isOnline);
+                
+                // Add to appropriate tables
+                if (isOnline) {
+                    serverList.innerHTML += rowData;
+                }
+                
+                if (isRecent && !isOnline) {
+                    recentServerList.innerHTML += rowData;
+                }
+                
+                allServerList.innerHTML += rowData;
+            }
+            
+            // Handle empty tables
+            handleEmptyTable(serverList, 'online', 4);
+            handleEmptyTable(recentServerList, 'recent', 5);
+            handleEmptyTable(allServerList, 'all', 5);
+            
+            // Update stats
+            document.getElementById('activeServersCount').textContent = activeCount;
+            document.getElementById('totalPlayersCount').textContent = totalPlayers;
+            document.getElementById('whitelistCount').textContent = Object.keys(whitelist).length;
+        }
+        
+        // Create server row HTML (CORRIGIDO)
+        function createServerRow(id, server, timeDiff, isOnline) {
+            const joinUrl = `roblox://experiences/start?placeId=${server.placeId || ''}&gameInstanceId=${id}`;
+            const date = new Date(server.lastActive || Date.now());
+            const dateStr = date.toLocaleDateString('pt-BR');
+            const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            const lastActivityCell = currentTab === 'online' ? '' : `
+                <td>
+                    <div style="font-size: 14px; line-height: 1.4;">
+                        <div>${dateStr}</div>
+                        <div style="color: var(--text-lighter);">${timeStr}</div>
+                    </div>
+                </td>
+            `;
+            
+            const rowClass = selectedServerId === id ? 'selected' : '';
+            
+            return `
+                <tr class="${rowClass}" onclick="selectServer('${id}')">
+                    <td>
+                        <div class="server-info">
+                            <img src="${server.thumbnail || 'https://www.roblox.com/asset-thumbnail/image?assetId=0&width=420&height=420&format=png'}" 
+                                 class="server-icon" 
+                                 alt="${server.gameName || 'Jogo Roblox'}"
+                                 onerror="this.src='https://www.roblox.com/asset-thumbnail/image?assetId=0&width=420&height=420&format=png'">
+                            <div class="server-details">
+                                <div class="server-name">
+                                    <i class="fas fa-gamepad" style="font-size: 14px;"></i>
+                                    ${server.gameName || 'Jogo Desconhecido'}
+                                </div>
+                                <div class="server-id">${id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="player-count">
+                            <i class="fas fa-users"></i>
+                            ${server.players || 0}/${server.maxPlayers || 0}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
+                            <i class="fas fa-${isOnline ? 'circle' : 'clock'}"></i>
+                            ${isOnline ? 'Online' : 'Offline'}
+                        </span>
+                    </td>
+                    ${lastActivityCell}
+                    <td>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="select-button" onclick="event.stopPropagation(); selectServer('${id}')">
+                                <i class="fas fa-terminal"></i> CONSOLE
+                            </button>
+                            <a href="${joinUrl}" class="enter-button" onclick="event.stopPropagation();" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> ENTRAR
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // Handle empty tables
+        function handleEmptyTable(table, type, colspan) {
+            if (table.children.length === 0) {
+                let message = '';
+                let icon = 'server';
+                let subMessage = '';
+                
+                switch(type) {
+                    case 'online':
+                        message = 'Nenhum servidor online no momento';
+                        icon = 'wifi-slash';
+                        subMessage = 'Aguarde novos servidores se conectarem';
+                        break;
+                    case 'recent':
+                        message = 'Nenhum servidor recente encontrado';
+                        icon = 'history';
+                        subMessage = 'Servidores ficam aqui por 5 minutos após desligar';
+                        break;
+                    case 'all':
+                        message = 'Nenhum servidor encontrado';
+                        icon = 'server';
+                        subMessage = 'Nenhum servidor se conectou ao sistema ainda';
+                        break;
+                }
+                
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="${colspan}" style="text-align:center; padding: 80px 20px; color: var(--text-light);">
+                            <i class="fas fa-${icon}" style="font-size: 64px; margin-bottom: 24px; display: block; opacity: 0.2;"></i>
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">${message}</div>
+                            <div style="font-size: 15px; opacity: 0.6;">${subMessage}</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Select Server
+        function selectServer(serverId) {
+            selectedServerId = serverId;
+            const serverSelect = document.getElementById('serverSelect');
+            
+            // Update dropdown
+            if (serverSelect) {
+                serverSelect.value = serverId;
+            }
+            
+            // Update table selection
+            document.querySelectorAll('.server-table tr').forEach(row => {
+                row.classList.remove('selected');
+            });
+            
+            // Find and select the row
+            const rows = document.querySelectorAll('.server-table tr');
+            for (let row of rows) {
+                if (row.innerHTML.includes(serverId)) {
+                    row.classList.add('selected');
+                    break;
+                }
+            }
+            
+            showToast(`Servidor ${serverId.substring(0, 8)}... selecionado`, "success");
+        }
+        
+        // Update Whitelist Display
+        function updateWhitelistDisplay() {
+            const whitelistList = document.getElementById('whitelistList');
+            whitelistList.innerHTML = '';
+            
+            const sortedWhitelist = Object.entries(whitelist)
+                .sort((a, b) => (b[1]?.addedAt || 0) - (a[1]?.addedAt || 0));
+            
+            sortedWhitelist.forEach(([userId, data]) => {
+                const item = document.createElement('div');
+                item.className = 'whitelist-item';
+                
+                const dateAdded = data?.addedAt ? new Date(data.addedAt).toLocaleDateString('pt-BR') : 'Data desconhecida';
+                const timeAdded = data?.addedAt ? new Date(data.addedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+                
+                item.innerHTML = `
+                    <div class="whitelist-info">
+                        <div class="whitelist-id">
+                            <i class="fas fa-user-check" style="margin-right: 8px;"></i>
+                            ${userId}
+                        </div>
+                        <div class="whitelist-date">Adicionado em ${dateAdded} às ${timeAdded}</div>
+                    </div>
+                    <button class="remove-button" id="removeBtn_${userId}" onclick="removeFromWhitelist('${userId}')">
+                        <i class="fas fa-times"></i> REMOVER
+                    </button>
+                `;
+                
+                // Disable remove button for non-admin users
+                if (currentUserRole !== 'admin') {
+                    const removeBtn = item.querySelector('.remove-button');
+                    removeBtn.disabled = true;
+                }
+                
+                whitelistList.appendChild(item);
+            });
+            
+            if (sortedWhitelist.length === 0) {
+                whitelistList.innerHTML = `
+                    <div style="text-align: center; padding: 80px 20px; color: var(--text-light);">
+                        <i class="fas fa-users-slash" style="font-size: 64px; margin-bottom: 24px; display: block; opacity: 0.2;"></i>
+                        <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Nenhum jogador na whitelist</div>
+                        <div style="font-size: 15px; opacity: 0.6;">
+                            ${currentUserRole === 'admin' ? 'Adicione jogadores usando o campo acima' : 'Apenas administradores podem adicionar jogadores'}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Update Stats
+        function updateStats() {
+            let activeCount = 0;
+            let totalPlayers = 0;
+            
+            for (const [id, server] of Object.entries(servers)) {
+                if (!server) continue;
+                
+                const timeDiff = Date.now() - (server.lastActive || 0);
+                const isOnline = timeDiff < 15000;
+                
+                if (isOnline) {
+                    activeCount++;
+                    totalPlayers += server.players || 0;
+                }
+            }
+            
+            document.getElementById('activeServersCount').textContent = activeCount;
+            document.getElementById('totalPlayersCount').textContent = totalPlayers;
+            document.getElementById('whitelistCount').textContent = Object.keys(whitelist).length;
+        }
+        
+        // Add to Whitelist (Admin only)
+        function addToWhitelist() {
+            if (currentUserRole !== 'admin') {
+                showToast("Apenas administradores podem adicionar à whitelist", "error");
+                document.getElementById('permissionWarning').style.animation = 'shake 0.6s ease';
+                setTimeout(() => {
+                    document.getElementById('permissionWarning').style.animation = '';
+                }, 600);
+                return;
+            }
+            
+            const input = document.getElementById('whitelistInput');
+            const userId = input.value.trim();
+            
+            if (!userId) {
+                showToast("Digite o UserID do jogador", "warning");
+                input.focus();
+                return;
+            }
+            
+            if (isNaN(userId)) {
+                showToast("O UserID deve ser um número", "warning");
+                input.focus();
+                return;
+            }
+            
+            if (whitelist[userId]) {
+                showToast("Este jogador já está na whitelist", "warning");
+                input.focus();
+                return;
+            }
+            
+            const playerData = {
+                addedAt: Date.now(),
+                addedBy: currentUserRole === 'admin' ? "Administrador" : "Usuário",
+                role: currentUserRole
+            };
+            
+            database.ref('whitelist/' + userId).set(playerData)
+                .then(() => {
+                    showToast(`Jogador ${userId} adicionado à whitelist`, "success");
+                    input.value = '';
+                    input.focus();
+                    
+                    // Visual feedback
+                    const addBtn = document.getElementById('addWhitelistBtn');
+                    addBtn.innerHTML = '<i class="fas fa-check"></i> ADICIONADO';
+                    addBtn.style.background = 'var(--user-gradient)';
+                    
+                    setTimeout(() => {
+                        addBtn.innerHTML = '<i class="fas fa-plus"></i> ADICIONAR';
+                    }, 2000);
+                })
+                .catch((error) => {
+                    showToast(`Erro: ${error.message}`, "error");
+                });
+        }
+        
+        // Remove from Whitelist (Admin only)
+        function removeFromWhitelist(userId) {
+            if (currentUserRole !== 'admin') {
+                showToast("Apenas administradores podem remover da whitelist", "error");
+                return;
+            }
+            
+            if (!confirm(`Remover jogador ${userId} da whitelist?`)) {
+                return;
+            }
+            
+            database.ref('whitelist/' + userId).remove()
+                .then(() => {
+                    showToast("Jogador removido da whitelist", "success");
+                })
+                .catch((error) => {
+                    showToast(`Erro: ${error.message}`, "error");
+                });
+        }
+        
+        // Send Execution
+        function sendExecution() {
+            const serverId = document.getElementById('serverSelect').value;
+            const code = document.getElementById('scriptBox').value;
+            
+            if (!serverId) {
+                showToast("Selecione um servidor primeiro", "warning");
+                return;
+            }
+            
+            if (!code.trim()) {
+                showToast("Digite algum código para executar", "warning");
+                return;
+            }
+            
+            const commandData = {
+                script: code,
+                timestamp: Date.now(),
+                executor: currentUserRole === 'admin' ? "Administrador" : "Usuário",
+                role: currentUserRole
+            };
+            
+            database.ref('commands/' + serverId).set(commandData)
+                .then(() => {
+                    showToast("Comando enviado com sucesso", "success");
+                    
+                    // Visual feedback
+                    const executeBtn = document.querySelector('.execute-button');
+                    executeBtn.innerHTML = '<i class="fas fa-check"></i> ENVIADO';
+                    executeBtn.style.background = 'var(--user-gradient)';
+                    
+                    setTimeout(() => {
+                        executeBtn.innerHTML = '<i class="fas fa-play"></i> EXECUTAR';
+                        executeBtn.style.background = 'var(--primary-gradient)';
+                    }, 2000);
+                })
+                .catch((error) => {
+                    showToast(`Erro: ${error.message}`, "error");
+                });
+        }
+        
+        // Refresh Servers
+        function refreshServers() {
+            database.ref('servers').once('value')
+                .then(() => {
+                    showToast("Servidores atualizados", "success");
+                    
+                    // Visual feedback
+                    const refreshBtn = document.querySelector('.action-button.refresh');
+                    refreshBtn.innerHTML = '<i class="fas fa-check"></i> ATUALIZADO';
+                    
+                    setTimeout(() => {
+                        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> ATUALIZAR';
+                    }, 2000);
+                });
+        }
+        
+        // Clear Script
+        function clearScript() {
+            document.getElementById('scriptBox').value = '';
+            document.getElementById('scriptBox').focus();
+            showToast("Código limpo", "success");
+        }
+        
+        // Show Toast
+        function showToast(message, type) {
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(toast => {
+                toast.remove();
+            });
+            
+            // Create toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            else if (type === 'warning') icon = 'exclamation-triangle';
+            else if (type === 'error') icon = 'exclamation-circle';
+            else if (type === 'info') icon = 'info-circle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <div>${message}</div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) reverse';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        document.body.removeChild(toast);
+                    }
+                }, 500);
+            }, 5000);
+        }
+        
+        // Event Listeners
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+        
+        document.getElementById('whitelistInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addToWhitelist();
+            }
+        });
+        
+        // Initial connection status
+        database.ref('.info/connected').on('value', (snapshot) => {
+            const isConnected = snapshot.val();
+            const statusElement = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionStatusText');
+            
+            if (isConnected) {
+                statusElement.textContent = 'Conectado ao Firebase';
+                statusElement.style.color = 'var(--success-light)';
+                statusText.textContent = 'Conectado';
+                statusText.style.color = 'var(--success-light)';
+            } else {
+                statusElement.textContent = 'Desconectado do Firebase';
+                statusElement.style.color = 'var(--danger-light)';
+                statusText.textContent = 'Desconectado';
+                statusText.style.color = 'var(--danger-light)';
+                showToast("Conexão com Firebase perdida", "error");
+            }
+        });
+    </script>
+</body>
+</html>
