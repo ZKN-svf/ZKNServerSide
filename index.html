@@ -2,1552 +2,848 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ZKN ServerSide Premium</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap">
     <style>
-        :root {
-            --primary: #8b5cf6;
-            --primary-dark: #7c3aed;
-            --primary-darker: #5b21b6;
-            --primary-light: #a78bfa;
-            --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
-            --secondary: #a855f7;
-            --success: #10b981;
-            --success-light: #34d399;
-            --warning: #f59e0b;
-            --warning-light: #fbbf24;
-            --danger: #ef4444;
-            --danger-light: #f87171;
-            --admin: #f59e0b;
-            --admin-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            --user: #10b981;
-            --user-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --discord: #5865f2;
-            --discord-gradient: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
-            --dark: #0f0b21;
-            --darker: #0a0618;
-            --dark-card: rgba(15, 11, 33, 0.95);
-            --glass: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --text: #ffffff;
-            --text-light: #e2e8f0;
-            --text-lighter: #94a3b8;
-            --border: rgba(139, 92, 246, 0.4);
-            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            --glow: 0 0 60px rgba(139, 92, 246, 0.4);
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Poppins', sans-serif;
         }
-        
+
         body {
-            background: var(--darker);
-            color: var(--text);
+            background: linear-gradient(135deg, #0a0618 0%, #0f0b21 100%);
             min-height: 100vh;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(91, 33, 182, 0.08) 0%, transparent 50%);
+            color: #fff;
         }
-        
-        /* Particles Background */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: var(--primary);
-            opacity: 0.1;
-            animation: float 15s infinite linear;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0) translateX(0); }
-            25% { transform: translateY(-20px) translateX(10px); }
-            50% { transform: translateY(10px) translateX(-20px); }
-            75% { transform: translateY(-10px) translateX(15px); }
-        }
-        
+
         /* Login Screen */
         .login-screen {
+            position: fixed;
+            inset: 0;
             display: flex;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 50%, #0a0618, #05030f);
+            z-index: 1000;
+            transition: opacity 0.5s ease, transform 0.4s ease;
         }
-        
-        .login-container {
-            width: 100%;
-            max-width: 500px;
-            position: relative;
-            z-index: 2;
-        }
-        
+
         .login-card {
-            background: rgba(15, 11, 33, 0.9);
+            background: rgba(15, 11, 33, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 50px 40px;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow), var(--glow);
-            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 32px;
+            padding: 48px 40px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.2);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
         }
-        
-        .login-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
-            border-radius: 24px 24px 0 0;
-        }
-        
-        .login-card::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
-            z-index: -1;
-        }
-        
+
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(40px) scale(0.95);
+                transform: translateY(40px) scale(0.96);
             }
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
-        
-        .logo-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
+
         .logo-icon {
             width: 80px;
             height: 80px;
-            background: var(--primary-gradient);
-            border-radius: 20px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
             box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
-            position: relative;
-            overflow: hidden;
         }
-        
-        .logo-icon::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            animation: shine 3s infinite;
-        }
-        
-        @keyframes shine {
-            0%, 100% { transform: translateX(-100%); }
-            50% { transform: translateX(100%); }
-        }
-        
+
         .logo-icon i {
-            font-size: 36px;
-            color: white;
+            font-size: 40px;
         }
-        
+
         .logo-title {
-            font-size: 42px;
-            font-weight: 900;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-        }
-        
-        .logo-subtitle {
-            font-size: 16px;
-            color: var(--text-light);
-            opacity: 0.8;
-            font-weight: 500;
-        }
-        
-        .premium-badge {
-            display: inline-block;
-            background: var(--primary-gradient);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-top: 15px;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-            text-transform: uppercase;
-        }
-        
-        .input-group {
-            margin-bottom: 30px;
-        }
-        
-        .input-label {
-            display: block;
-            margin-bottom: 12px;
-            color: var(--text-light);
-            font-size: 15px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .input-wrapper {
-            position: relative;
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 18px 52px 18px 22px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            color: var(--text);
-            font-size: 16px;
-            font-weight: 500;
-            transition: var(--transition);
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), var(--glow);
-        }
-        
-        .input-icon {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-lighter);
-            font-size: 18px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .input-icon:hover {
-            color: var(--primary-light);
-        }
-        
-        .login-button {
-            width: 100%;
-            padding: 20px;
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 10px;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
-        }
-        
-        .login-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: 0.6s;
-        }
-        
-        .login-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5);
-        }
-        
-        .login-button:hover::before {
-            left: 100%;
-        }
-        
-        .discord-section {
-            margin-top: 25px;
-            text-align: center;
-        }
-        
-        .discord-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: var(--discord-gradient);
-            color: white;
-            text-decoration: none;
-            padding: 16px 30px;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 700;
-            transition: var(--transition);
-            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
-            width: 100%;
-        }
-        
-        .discord-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(88, 101, 242, 0.5);
-        }
-        
-        .login-footer {
-            text-align: center;
-            margin-top: 35px;
-            padding-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-light);
-            font-size: 13px;
-            opacity: 0.7;
-            line-height: 1.6;
-        }
-        
-        /* Dashboard */
-        .dashboard {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.6s ease;
-        }
-        
-        .dashboard.show {
-            opacity: 1;
-        }
-        
-        /* Header */
-        .header {
-            background: rgba(15, 11, 33, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 0 40px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-        
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-        
-        .dashboard-logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .dashboard-logo-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--primary-gradient);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-        }
-        
-        .dashboard-logo-icon i {
-            font-size: 24px;
-            color: white;
-        }
-        
-        .dashboard-logo-text {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .dashboard-logo-title {
-            font-size: 22px;
+            font-size: 36px;
             font-weight: 800;
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             letter-spacing: -0.5px;
         }
-        
-        .dashboard-logo-subtitle {
+
+        .premium-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            padding: 6px 20px;
+            border-radius: 30px;
             font-size: 12px;
-            color: var(--text-light);
-            opacity: 0.8;
-            font-weight: 500;
+            font-weight: 700;
+            margin-top: 12px;
         }
-        
-        .header-right {
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            color: #fff;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+        }
+
+        .login-button, .discord-button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 20px;
+            justify-content: center;
+            gap: 12px;
         }
-        
+
+        .login-button {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        .login-button:hover, .discord-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .discord-button {
+            background: #5865f2;
+            color: white;
+            text-decoration: none;
+        }
+
+        .login-footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 25px;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .dashboard.show {
+            opacity: 1;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(15, 11, 33, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .dashboard-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dashboard-logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-logo-title {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 15px;
         }
-        
+
         .user-avatar {
             width: 45px;
             height: 45px;
-            background: var(--primary-gradient);
-            border-radius: 12px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 18px;
-            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
         }
-        
-        .user-details {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .user-name {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text);
-        }
-        
+
         .user-role {
-            font-size: 12px;
-            font-weight: 600;
             padding: 4px 12px;
             border-radius: 20px;
-            text-align: center;
-            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
         }
-        
-        .user-role.admin {
-            background: var(--admin-gradient);
-            color: white;
-        }
-        
-        .user-role.user {
-            background: var(--user-gradient);
-            color: white;
-        }
-        
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        
+
+        .user-role.admin { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .user-role.user { background: linear-gradient(135deg, #10b981, #059669); }
+
         .status-dot {
             width: 10px;
             height: 10px;
+            background: #10b981;
             border-radius: 50%;
-            background: var(--success);
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
-        
+
         .logout-button {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger-light);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 11px 22px;
-            border-radius: 12px;
-            font-size: 13px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 10px 20px;
+            border-radius: 14px;
+            color: #f87171;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.3s;
         }
-        
+
         .logout-button:hover {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background: #ef4444;
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
         }
-        
+
         /* Main Content */
         .main-content {
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-            max-width: 1800px;
+            padding: 30px;
+            max-width: 1600px;
             margin: 0 auto;
-            min-height: calc(100vh - 80px);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
         }
-        
-        @media (min-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr 1fr;
-            }
+
+        @media (max-width: 1000px) {
+            .main-content { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; }
         }
-        
+
         /* Cards */
         .card {
             background: rgba(15, 11, 33, 0.9);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 35px;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 28px;
+            padding: 28px;
+            transition: all 0.3s;
         }
-        
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
-            border-radius: 20px 20px 0 0;
-        }
-        
+
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), var(--glow);
-            border-color: var(--primary);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(139, 92, 246, 0.6);
         }
-        
+
         .card-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            padding-bottom: 25px;
+            gap: 18px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-        
+
         .card-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 16px;
+            width: 55px;
+            height: 55px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary-light);
             font-size: 24px;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
         }
-        
+
         .card-title-text h3 {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--text);
-            margin-bottom: 6px;
+            font-size: 20px;
+            margin-bottom: 5px;
         }
-        
+
         .card-title-text p {
-            font-size: 14px;
-            color: var(--text-light);
-            opacity: 0.8;
+            font-size: 13px;
+            color: #94a3b8;
         }
-        
+
         /* Tabs */
         .tabs {
             display: flex;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            border: 1px solid var(--glass-border);
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px;
+            border-radius: 20px;
+            margin-bottom: 20px;
         }
-        
+
         .tab {
             flex: 1;
-            padding: 14px;
+            padding: 12px;
             background: transparent;
             border: none;
-            border-radius: 12px;
-            color: var(--text-light);
-            font-size: 14px;
+            border-radius: 16px;
+            color: #94a3b8;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
-            text-align: center;
+            transition: all 0.3s;
         }
-        
+
         .tab.active {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
             color: white;
-            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
         }
-        
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
+
+        .tab-content { display: none; animation: fade 0.3s; }
+        .tab-content.active { display: block; }
+
+        @keyframes fade {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         /* Tables */
         .table-container {
             max-height: 450px;
             overflow-y: auto;
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            border-radius: 20px;
             background: rgba(0, 0, 0, 0.3);
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
         }
-        
+
         .table-container::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
-        
+
         .table-container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
         }
-        
+
         .table-container::-webkit-scrollbar-thumb {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
             border-radius: 10px;
         }
-        
+
         .server-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 15px;
+            border-collapse: collapse;
         }
-        
-        .server-table thead {
+
+        .server-table th {
+            text-align: left;
+            padding: 15px 20px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: sticky;
             top: 0;
-            background: rgba(15, 11, 33, 0.98);
-            backdrop-filter: blur(20px);
-            z-index: 10;
+            background: rgba(15, 11, 33, 0.95);
         }
-        
-        .server-table th {
-            padding: 20px 25px;
-            text-align: left;
-            color: var(--text-light);
-            font-weight: 700;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-        
+
         .server-table td {
-            padding: 20px 25px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .server-table tbody tr {
-            transition: var(--transition);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             cursor: pointer;
+            transition: all 0.2s;
         }
-        
-        .server-table tbody tr:hover {
+
+        .server-table tr:hover td {
             background: rgba(139, 92, 246, 0.1);
-            transform: translateX(5px);
         }
-        
-        .server-table tbody tr.selected {
+
+        .server-table tr.selected td {
             background: rgba(139, 92, 246, 0.15);
-            border-left: 4px solid var(--primary);
+            border-left: 3px solid #8b5cf6;
         }
-        
+
         .server-info {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 15px;
         }
-        
+
         .server-icon {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 12px;
             object-fit: cover;
-            border: 2px solid rgba(139, 92, 246, 0.5);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            transition: var(--transition);
+            border: 1px solid rgba(139, 92, 246, 0.5);
         }
-        
-        .server-icon:hover {
-            transform: scale(1.05) rotate(3deg);
-            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
-        }
-        
-        .server-details {
-            flex: 1;
-        }
-        
+
         .server-name {
             font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 4px;
         }
-        
+
         .server-id {
-            font-size: 13px;
-            color: var(--text-lighter);
-            font-family: 'Consolas', 'Monaco', monospace;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 6px 12px;
-            border-radius: 8px;
-            display: inline-block;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+            color: #64748b;
+            font-family: monospace;
         }
-        
+
         .player-count {
-            font-weight: 800;
-            color: var(--primary-light);
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .status-badge {
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 13px;
             font-weight: 700;
+            color: #a78bfa;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-online {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .status-offline {
+            background: rgba(107, 114, 128, 0.2);
+            color: #94a3b8;
+        }
+
+        .action-button {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            letter-spacing: 0.5px;
         }
-        
-        .status-online {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success-light);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
-        
-        .status-offline {
-            background: rgba(107, 114, 128, 0.2);
-            color: var(--text-lighter);
-            border: 1px solid rgba(107, 114, 128, 0.4);
-        }
-        
-        .server-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .action-button {
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: none;
-            white-space: nowrap;
-        }
-        
-        .action-button.select {
-            background: rgba(139, 92, 246, 0.15);
-            color: var(--primary-light);
-            border: 1px solid rgba(139, 92, 246, 0.4);
-        }
-        
-        .action-button.enter {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success-light);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            text-decoration: none;
-        }
-        
+
         .action-button:hover {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
-        
-        .action-button.select:hover {
-            background: var(--primary-gradient);
-            color: white;
-        }
-        
-        .action-button.enter:hover {
-            background: var(--user-gradient);
-            color: white;
-        }
-        
+
         /* Stats */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-            margin-top: 30px;
+            gap: 15px;
+            margin-top: 25px;
         }
-        
+
         .stat-card {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 20px;
             text-align: center;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            border-color: var(--primary);
-        }
-        
+
         .stat-value {
-            font-size: 42px;
-            font-weight: 900;
-            color: var(--primary-light);
-            margin-bottom: 10px;
-            text-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            font-size: 32px;
+            font-weight: 800;
+            color: #a78bfa;
         }
-        
+
         .stat-label {
-            font-size: 13px;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            opacity: 0.8;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
         }
-        
+
         /* Script Editor */
         .script-editor {
-            min-height: 320px;
-            background: rgba(10, 8, 26, 0.9);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 25px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 15px;
-            line-height: 1.6;
-            color: #00ff9d;
-            resize: none;
-            margin-bottom: 25px;
-            transition: var(--transition);
-            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.3);
             width: 100%;
+            min-height: 280px;
+            background: #05030f;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            color: #00ff9d;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            margin-bottom: 20px;
         }
-        
+
         .script-editor:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), 
-                        inset 0 4px 20px rgba(0, 0, 0, 0.4);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
         }
-        
+
+        .script-editor:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .script-controls {
             display: flex;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        
+
         .server-select {
             flex: 1;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 14px;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-        
-        .server-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
-        }
-        
-        .execute-button {
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 12px;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
             color: white;
-            padding: 15px 35px;
-            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .execute-button {
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border: none;
+            border-radius: 16px;
+            color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
         }
-        
-        .execute-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5);
+
+        .execute-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        
+
         .script-actions {
             display: flex;
-            gap: 15px;
+            gap: 12px;
         }
-        
+
         .script-button {
             flex: 1;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 12px;
+            border-radius: 14px;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            border: 1px solid transparent;
+            transition: all 0.3s;
+            border: 1px solid;
+            background: transparent;
         }
-        
+
         .script-button.refresh {
-            background: rgba(139, 92, 246, 0.15);
-            color: var(--primary-light);
             border-color: rgba(139, 92, 246, 0.4);
+            color: #c4b5fd;
         }
-        
+
         .script-button.clear {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger-light);
             border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
         }
-        
+
         .script-button:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
-        
+
         .script-button.refresh:hover {
-            background: var(--primary-gradient);
-            color: white;
+            background: rgba(139, 92, 246, 0.2);
         }
-        
+
         .script-button.clear:hover {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
+            background: rgba(239, 68, 68, 0.2);
         }
-        
+
         /* Whitelist */
         .whitelist-form {
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-        
+
         .whitelist-input {
             flex: 1;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 14px;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-        
-        .whitelist-input:focus {
-            outline: none;
-            border-color: var(--success);
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
-        }
-        
-        .add-button {
-            background: var(--user-gradient);
-            border: none;
-            border-radius: 12px;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
             color: white;
-            padding: 15px 30px;
-            font-size: 14px;
+        }
+
+        .add-button {
+            padding: 14px 25px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 16px;
+            color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
         }
-        
-        .add-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.5);
-        }
-        
+
         .add-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
-        
+
         .whitelist-list {
             max-height: 350px;
             overflow-y: auto;
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px;
         }
-        
+
         .whitelist-item {
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 15px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: var(--transition);
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        
-        .whitelist-item:hover {
-            background: rgba(16, 185, 129, 0.15);
-            transform: translateY(-3px);
-        }
-        
-        .whitelist-info {
-            flex: 1;
-        }
-        
+
         .whitelist-id {
-            font-weight: 800;
-            color: var(--success-light);
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 16px;
-            margin-bottom: 6px;
+            font-weight: 700;
+            color: #34d399;
+            font-family: monospace;
         }
-        
+
         .whitelist-date {
-            font-size: 13px;
-            color: var(--text-light);
-            opacity: 0.8;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
         }
-        
+
         .remove-button {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger-light);
+            background: rgba(239, 68, 68, 0.2);
             border: 1px solid rgba(239, 68, 68, 0.4);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: #f87171;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.2s;
         }
-        
-        .remove-button:hover {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+
+        .remove-button:hover:not(:disabled) {
+            background: #ef4444;
             color: white;
-            transform: translateY(-3px);
         }
-        
+
         .remove-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
-        
+
         /* System Info */
         .system-info {
             background: rgba(139, 92, 246, 0.1);
             border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 16px;
-            padding: 25px;
-            margin-top: 30px;
-            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 25px;
         }
-        
+
         .system-info h4 {
-            color: var(--primary-light);
-            font-size: 16px;
-            font-weight: 800;
-            margin-bottom: 20px;
+            color: #a78bfa;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
-        
+
         .system-info p {
-            font-size: 14px;
-            color: var(--text-light);
-            line-height: 1.8;
-            margin-bottom: 15px;
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 8px;
             padding-left: 20px;
-            border-left: 3px solid rgba(139, 92, 246, 0.6);
+            border-left: 2px solid #8b5cf6;
         }
-        
+
         /* Toast */
         .toast {
             position: fixed;
-            top: 100px;
-            right: 40px;
-            padding: 20px 25px;
-            border-radius: 14px;
-            color: white;
-            font-weight: 700;
-            z-index: 10000;
-            animation: slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid;
             display: flex;
             align-items: center;
-            gap: 15px;
-            backdrop-filter: blur(20px);
-            border: 1px solid;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            font-weight: 600;
         }
-        
-        .toast.success {
-            background: rgba(16, 185, 129, 0.95);
-            border-color: rgba(16, 185, 129, 0.5);
+
+        .toast.success { border-left-color: #10b981; color: #10b981; }
+        .toast.error { border-left-color: #ef4444; color: #ef4444; }
+        .toast.warning { border-left-color: #f59e0b; color: #f59e0b; }
+        .toast.info { border-left-color: #8b5cf6; color: #8b5cf6; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        
-        .toast.warning {
-            background: rgba(245, 158, 11, 0.95);
-            border-color: rgba(245, 158, 11, 0.5);
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
         }
-        
-        .toast.error {
-            background: rgba(239, 68, 68, 0.95);
-            border-color: rgba(239, 68, 68, 0.5);
-        }
-        
-        .toast.info {
-            background: rgba(139, 92, 246, 0.95);
-            border-color: rgba(139, 92, 246, 0.5);
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header {
-                padding: 0 25px;
-                height: auto;
-                flex-direction: column;
-                padding: 20px 25px;
-                gap: 20px;
-            }
-            
-            .main-content {
-                padding: 25px;
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .card {
-                padding: 25px;
-            }
-            
-            .server-table th,
-            .server-table td {
-                padding: 15px 20px;
-            }
-            
-            .script-controls,
-            .whitelist-form {
-                flex-direction: column;
-            }
-            
-            .toast {
-                right: 25px;
-                left: 25px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .main-content {
-                padding: 20px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .server-table th,
-            .server-table td {
-                padding: 12px 15px;
-                font-size: 14px;
-            }
-            
-            .server-actions {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .login-card {
-                padding: 35px 25px;
-            }
-            
-            .logo-title {
-                font-size: 36px;
-            }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.3;
         }
     </style>
 </head>
 <body>
-    <!-- Particles Background -->
-    <div class="particles" id="particles"></div>
-    
-    <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="logo-header">
-                    <div class="logo-icon">
-                        <i class="fas fa-server"></i>
-                    </div>
-                    <h1 class="logo-title">ZKN ServerSide</h1>
-                    <p class="logo-subtitle">by @fr_zkn</p>
-                    <div class="premium-badge">Sigeon Pex EDITION</div>
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">
-                        <i class="fas fa-user"></i>
-                        UserID da Roblox bro
-                    </label>
-                    <div class="input-wrapper">
-                        <input type="text" class="input-field" id="userId" placeholder="Digite seu UserID da Roblox">
-                    </div>
-                </div>
-                
-                <button class="login-button" onclick="checkUserId()">
-                    <i class="fas fa-sign-in-alt"></i> Entrar
-                </button>
-                
-                <div class="discord-section">
-                    <a href="https://discord.gg/cjqncMvte6" target="_blank" class="discord-button">
-                        <i class="fab fa-discord"></i> Obter Whitelist
-                    </a>
-                </div>
-
-                
-                <div class="login-footer">
-                    Sistema exclusivo para usuários com whitelist<br>
-                    Sigeon Pex Security<br>
-                    Todos os direitos reservados © 2024 ZKN Team
-                </div>
-            </div>
+        <div class="login-card">
+            <div class="logo-icon"><i class="fas fa-server"></i></div>
+            <h1 class="logo-title">ZKN ServerSide</h1>
+            <div class="premium-badge">Sigeon Pex EDITION</div>
+            <input type="text" class="input-field" id="userId" placeholder="Digite seu UserID da Roblox" autocomplete="off">
+            <button class="login-button" onclick="checkUserId()"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+            <a href="https://discord.gg/cjqncMvte6" target="_blank" class="discord-button"><i class="fab fa-discord"></i> Obter Whitelist</a>
+            <div class="login-footer">Sistema exclusivo para usuários com whitelist<br>Sigeon Pex Security</div>
         </div>
     </div>
-    
-    <!-- Dashboard -->
+
     <div class="dashboard" id="dashboard">
-        <!-- Header -->
         <header class="header">
-            <div class="header-left">
-                <div class="dashboard-logo">
-                    <div class="dashboard-logo-icon">
-                        <i class="fas fa-server"></i>
-                    </div>
-                    <div class="dashboard-logo-text">
-                        <div class="dashboard-logo-title">ZKN ServerSide</div>
-                        <div class="dashboard-logo-subtitle">Premium</div>
-                    </div>
-                </div>
+            <div class="dashboard-logo">
+                <div class="dashboard-logo-icon"><i class="fas fa-server"></i></div>
+                <div><div class="dashboard-logo-title">ZKN ServerSide</div><div style="font-size: 11px; color:#94a3b8;">Premium</div></div>
             </div>
-            
-            <div class="header-right">
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
                 <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name" id="userName">Usuário</div>
-                        <div class="user-role" id="userRoleBadge">VIP</div>
-                    </div>
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <div><div id="userName">Usuário</div><div id="userRoleBadge" class="user-role user">VIP</div></div>
                 </div>
-                
-                <div class="connection-status">
-                    <span class="status-dot"></span>
-                    <span id="connectionStatus">Conectado</span>
-                </div>
-                
-                <button class="logout-button" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> SAIR
-                </button>
+                <div class="status-dot"></div>
+                <button class="logout-button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> SAIR</button>
             </div>
         </header>
-        
-        <!-- Main Content -->
+
         <main class="main-content">
-            <!-- Left Column -->
             <div class="left-column">
-                <!-- Servers Card -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">
-                            <div class="card-icon">
-                                <i class="fas fa-gamepad"></i>
-                            </div>
-                            <div class="card-title-text">
-                                <h3>SERVIDORES</h3>
-                                <p>Clique em "Todos" pra ver os servidores Infectados</p>
-                            </div>
-                        </div>
+                        <div class="card-icon"><i class="fas fa-gamepad"></i></div>
+                        <div class="card-title-text"><h3>SERVIDORES</h3><p>Clique em "Todos" pra ver os servidores</p></div>
                     </div>
-                    
                     <div class="tabs">
                         <button class="tab active" onclick="switchTab('online')">Online</button>
                         <button class="tab" onclick="switchTab('recent')">Recentes</button>
                         <button class="tab" onclick="switchTab('all')">Todos</button>
                     </div>
-                    
-                    <!-- Online Servers -->
-                    <div class="tab-content active" id="online-tab">
-                        <div class="table-container">
-                            <table class="server-table">
-                                <thead>
-                                    <tr>
-                                        <th>Servidor</th>
-                                        <th>Jogadores</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="serverList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- Recent Servers -->
-                    <div class="tab-content" id="recent-tab">
-                        <div class="table-container">
-                            <table class="server-table">
-                                <thead>
-                                    <tr>
-                                        <th>Servidor</th>
-                                        <th>Jogadores</th>
-                                        <th>Status</th>
-                                        <th>Última Atividade</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recentServerList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- All Servers -->
-                    <div class="tab-content" id="all-tab">
-                        <div class="table-container">
-                            <table class="server-table">
-                                <thead>
-                                    <tr>
-                                        <th>Servidor</th>
-                                        <th>Jogadores</th>
-                                        <th>Status</th>
-                                        <th>Última Atividade</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="allServerList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- Stats -->
+                    <div class="tab-content active" id="online-tab"><div class="table-container"><table class="server-table"><thead><tr><th>Servidor</th><th>Jogadores</th><th>Status</th><th>Ações</th></tr></thead><tbody id="serverList"></tbody></table></div></div>
+                    <div class="tab-content" id="recent-tab"><div class="table-container"><table class="server-table"><thead><tr><th>Servidor</th><th>Jogadores</th><th>Status</th><th>Última Atividade</th><th>Ações</th></tr></thead><tbody id="recentServerList"></tbody></table></div></div>
+                    <div class="tab-content" id="all-tab"><div class="table-container"><table class="server-table"><thead><tr><th>Servidor</th><th>Jogadores</th><th>Status</th><th>Última Atividade</th><th>Ações</th></tr></thead><tbody id="allServerList"></tbody></table></div></div>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value" id="activeServersCount">0</div>
-                            <div class="stat-label">Servidores Ativos</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="totalPlayersCount">0</div>
-                            <div class="stat-label">Jogadores Online</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="whitelistCount">0</div>
-                            <div class="stat-label">Whitelist</div>
-                        </div>
+                        <div class="stat-card"><div class="stat-value" id="activeServersCount">0</div><div class="stat-label">Servidores Ativos</div></div>
+                        <div class="stat-card"><div class="stat-value" id="totalPlayersCount">0</div><div class="stat-label">Jogadores Online</div></div>
+                        <div class="stat-card"><div class="stat-value" id="whitelistCount">0</div><div class="stat-label">Whitelist</div></div>
                     </div>
                 </div>
-                
-                <!-- System Info -->
-                <div class="system-info">
-                    <h4><i class="fas fa-info-circle"></i> Informações do SS</h4>
-                    <p>• Execução de scripts premium e otimizada</p>
-                    <p>• Sistema de Whitelist</p>
-                    <p>• Monitoramento em tempo real</p>
-                    <p>• Interface otimizada para PC e mobile</p>
-                    <p>• Sistema seguro com criptografia</p>
-                    <p>• Segurança máxima! XD</p>
-                </div>
+                <div class="system-info"><h4><i class="fas fa-info-circle"></i> Informações do SS</h4><p>• Execução de scripts premium e otimizada</p><p>• Sistema de Whitelist seguro</p><p>• Monitoramento em tempo real</p><p>• Segurança máxima</p></div>
             </div>
-            
-            <!-- Right Column -->
             <div class="right-column">
-                <!-- Script Executor -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">
-                            <div class="card-icon">
-                                <i class="fas fa-terminal"></i>
-                            </div>
-                            <div class="card-title-text">
-                                <h3>Executor Premium</h3>
-                                <p id="executorPermissionText">Execute scripts remotamente</p>
-                            </div>
-                        </div>
+                        <div class="card-icon"><i class="fas fa-terminal"></i></div>
+                        <div class="card-title-text"><h3>Executor Premium</h3><p id="executorPermissionText">Execute scripts remotamente</p></div>
                     </div>
-                    
-                    <textarea class="script-editor" id="scriptBox" placeholder="-- Digite seu código Lua aqui
--- Exemplo: require(119467537742604).ZKN('username')
--- Sistema seguro com bypass VLuau
--- Tudo pensado em conforto ^^" 
-                    ${currentUserRole !== 'admin' && !userHasWhitelist ? 'disabled' : ''}></textarea>
-                    
+                    <textarea class="script-editor" id="scriptBox" placeholder="-- Digite seu código Lua aqui&#10;-- Exemplo: print('ZKN ServerSide')"></textarea>
                     <div class="script-controls">
-                        <select class="server-select" id="serverSelect">
-                            <option value="">Selecione um servidor</option>
-                        </select>
-                        <button class="execute-button" onclick="sendExecution()" id="executeBtn">
-                            <i class="fas fa-play"></i> EXECUTAR
-                        </button>
+                        <select class="server-select" id="serverSelect"><option value="">Selecione um servidor</option></select>
+                        <button class="execute-button" id="executeBtn" onclick="sendExecution()"><i class="fas fa-play"></i> EXECUTAR</button>
                     </div>
-                    
                     <div class="script-actions">
-                        <button class="script-button refresh" onclick="refreshServers()">
-                            <i class="fas fa-sync-alt"></i> ATUALIZAR
-                        </button>
-                        <button class="script-button clear" onclick="clearScript()">
-                            <i class="fas fa-trash"></i> LIMPAR
-                        </button>
+                        <button class="script-button refresh" onclick="refreshServers()"><i class="fas fa-sync-alt"></i> ATUALIZAR</button>
+                        <button class="script-button clear" onclick="clearScript()"><i class="fas fa-trash"></i> LIMPAR</button>
                     </div>
                 </div>
-                
-                <!-- Whitelist -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">
-                            <div class="card-icon">
-                                <i class="fas fa-user-shield"></i>
-                            </div>
-                            <div class="card-title-text">
-                                <h3>Whitelist</h3>
-                                <p id="whitelistPermissionText">Controle de acesso premium</p>
-                            </div>
-                        </div>
+                        <div class="card-icon"><i class="fas fa-user-shield"></i></div>
+                        <div class="card-title-text"><h3>Whitelist</h3><p id="whitelistPermissionText">Controle de acesso premium</p></div>
                     </div>
-                    
                     <div class="whitelist-form">
-                        <input type="text" class="whitelist-input" id="whitelistInput" placeholder="Digite o UserID do jogador">
-                        <button class="add-button" id="addWhitelistBtn" onclick="addToWhitelist()">
-                            <i class="fas fa-plus"></i> ADICIONAR
-                        </button>
+                        <input type="text" class="whitelist-input" id="whitelistInput" placeholder="Digite o UserID do jogador" autocomplete="off">
+                        <button class="add-button" id="addWhitelistBtn" onclick="addToWhitelist()"><i class="fas fa-plus"></i> ADICIONAR</button>
                     </div>
-                    
                     <div class="whitelist-list" id="whitelistList"></div>
                 </div>
             </div>
@@ -1555,845 +851,226 @@
     </div>
 
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            databaseURL: "https://zkn-ss-default-rtdb.firebaseio.com/"
-        };
-
-        // Initialize Firebase
+        const firebaseConfig = { databaseURL: "https://zkn-ss-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        // Global Variables
-        let servers = {};
-        let whitelist = {};
-        let currentUserRole = null;
-        let currentUserId = null;
-        let currentTab = 'online';
-        let selectedServerId = null;
-        let userHasWhitelist = false;
-        
-        // Create particles background
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                const size = Math.random() * 4 + 1;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.top = `${Math.random() * 100}%`;
-                particle.style.animationDelay = `${Math.random() * 15}s`;
-                particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
-                particlesContainer.appendChild(particle);
-            }
-        }
-        
-        // Login Function by UserID
-        function checkUserId() {
-            const userIdInput = document.getElementById('userId').value.trim();
-            const loginScreen = document.getElementById('loginScreen');
-            const dashboard = document.getElementById('dashboard');
-            
-            if (!userIdInput) {
-                showToast("Digite um UserID válido", "warning");
-                return;
-            }
-            
-            // Check if it's admin password
-            if (userIdInput === "ZKN9999") { //Eu sei que tá fácil demais, preguiça dagota...
-                // Admin access
-                currentUserRole = 'admin';
-                currentUserId = "ADMIN";
-                userHasWhitelist = true;
-                successfulLogin(loginScreen, dashboard, "Administrador");
-                return;
-            }
-            
-            // Check if user ID is valid number
-            if (isNaN(userIdInput)) {
-                showToast("UserID deve ser um número válido", "error");
-                document.getElementById('userId').style.borderColor = 'var(--danger)';
-                setTimeout(() => {
-                    document.getElementById('userId').style.borderColor = '';
-                }, 1000);
-                return;
-            }
-            
-            // Check whitelist
-            database.ref('whitelist').once('value')
-                .then((snapshot) => {
-                    whitelist = snapshot.val() || {};
-                    
-                    if (whitelist[userIdInput]) {
-                        // User has whitelist
-                        currentUserRole = 'user';
-                        currentUserId = userIdInput;
-                        userHasWhitelist = true;
-                        
-                        // Get username from whitelist data or use ID
-                        const userData = whitelist[userIdInput];
-                        const userName = userData?.username || `User${userIdInput.substring(0, 6)}`;
-                        
-                        successfulLogin(loginScreen, dashboard, userName);
-                    } else {
-                        // User not in whitelist
-                        showToast("UserID não está na whitelist", "error");
-                        document.getElementById('userId').style.borderColor = 'var(--danger)';
-                        document.getElementById('userId').style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.2)';
-                        
-                        setTimeout(() => {
-                            document.getElementById('userId').style.borderColor = '';
-                            document.getElementById('userId').style.boxShadow = '';
-                        }, 1000);
-                    }
-                })
-                .catch((error) => {
-                    showToast(`Erro: ${error.message}`, "error");
-                });
-        }
-        
-        function successfulLogin(loginScreen, dashboard, userName) {
-            // Smooth transition
-            loginScreen.style.opacity = '0';
-            loginScreen.style.transform = 'translateY(-30px) scale(0.9)';
-            
-            setTimeout(() => {
-                loginScreen.style.display = 'none';
-                dashboard.style.display = 'block';
-                
-                setTimeout(() => {
-                    dashboard.classList.add('show');
-                    initializeDashboard(userName);
-                }, 50);
-            }, 350);
-            
-            showToast(`Bem-vindo, ${userName}!`, "success");
-        }
-        
-        // Logout Function
-        function logout() {
-            const dashboard = document.getElementById('dashboard');
-            const loginScreen = document.getElementById('loginScreen');
-            
-            dashboard.classList.remove('show');
-            
-            setTimeout(() => {
-                dashboard.style.display = 'none';
-                loginScreen.style.display = 'flex';
-                
-                setTimeout(() => {
-                    loginScreen.style.opacity = '1';
-                    loginScreen.style.transform = 'translateY(0) scale(1)';
-                    document.getElementById('userId').value = '';
-                    currentUserRole = null;
-                    currentUserId = null;
-                    userHasWhitelist = false;
-                }, 50);
-            }, 350);
-            
-            showToast("Sessão encerrada", "info");
-        }
-        
-        // Initialize Dashboard
-        function initializeDashboard(userName) {
-            // Update UI based on role
-            updateRoleUI(userName);
-            
-            // Load whitelist
-            loadWhitelist();
-            
-            // Start server monitoring
-            monitorServers();
-            
-            // Update time
-            setInterval(() => {
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('pt-BR');
-                document.getElementById('lastUpdate').textContent = timeString;
-            }, 1000);
-            
-            // Check permission for whitelist and executor
-            setupPermissions();
-        }
-        
-        // Update UI based on user role
-        function updateRoleUI(userName) {
-            // Update user info
-            document.getElementById('userName').textContent = userName;
-            const userRoleBadge = document.getElementById('userRoleBadge');
-            
-            if (currentUserRole === 'admin') {
-                userRoleBadge.textContent = 'ADMIN';
-                userRoleBadge.className = 'user-role admin';
-            } else {
-                userRoleBadge.textContent = 'VIP';
-                userRoleBadge.className = 'user-role user';
-            }
-        }
-        
-        // Setup permissions based on role
-        function setupPermissions() {
-            const addButton = document.getElementById('addWhitelistBtn');
-            const whitelistInput = document.getElementById('whitelistInput');
-            const whitelistPermissionText = document.getElementById('whitelistPermissionText');
-            const executorPermissionText = document.getElementById('executorPermissionText');
-            const scriptBox = document.getElementById('scriptBox');
-            const executeBtn = document.getElementById('executeBtn');
-            
-            if (currentUserRole === 'admin') {
-                // Admin can manage whitelist and execute scripts
-                if (addButton) addButton.disabled = false;
-                if (whitelistInput) whitelistInput.disabled = false;
-                if (whitelistPermissionText) {
-                    whitelistPermissionText.textContent = 'Controle de acesso premium (Admin)';
-                    whitelistPermissionText.style.color = 'var(--admin)';
-                }
-                if (executorPermissionText) {
-                    executorPermissionText.textContent = 'Execute scripts remotamente (Admin)';
-                    executorPermissionText.style.color = 'var(--admin)';
-                }
-                if (scriptBox) scriptBox.disabled = false;
-                if (executeBtn) executeBtn.disabled = false;
-            } else if (userHasWhitelist) {
-                // User with whitelist can only execute scripts
-                if (addButton) addButton.disabled = true;
-                if (whitelistInput) whitelistInput.disabled = true;
-                if (whitelistPermissionText) {
-                    whitelistPermissionText.textContent = 'Acesso somente leitura (VIP)';
-                    whitelistPermissionText.style.color = 'var(--user)';
-                }
-                if (executorPermissionText) {
-                    executorPermissionText.textContent = 'Execute scripts remotamente (VIP)';
-                    executorPermissionText.style.color = 'var(--user)';
-                }
-                if (scriptBox) scriptBox.disabled = false;
-                if (executeBtn) executeBtn.disabled = false;
-            } else {
-                // User without whitelist cannot do anything
-                if (addButton) addButton.disabled = true;
-                if (whitelistInput) whitelistInput.disabled = true;
-                if (whitelistPermissionText) {
-                    whitelistPermissionText.textContent = 'Acesso negado - Sem whitelist';
-                    whitelistPermissionText.style.color = 'var(--danger)';
-                }
-                if (executorPermissionText) {
-                    executorPermissionText.textContent = 'Acesso negado - Sem whitelist';
-                    executorPermissionText.style.color = 'var(--danger)';
-                }
-                if (scriptBox) scriptBox.disabled = true;
-                if (executeBtn) executeBtn.disabled = true;
-            }
-        }
-        
-        // Switch Tabs
-        function switchTab(tabId) {
-            currentTab = tabId;
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Remove active class from all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Add active class to clicked tab
-            event.target.classList.add('active');
-            
-            // Show corresponding content
-            const tabContent = document.getElementById(tabId + '-tab');
-            if (tabContent) tabContent.classList.add('active');
-            
-            // Update server tables
-            updateServerTable();
-        }
-        
-        // Load Whitelist
-        function loadWhitelist() {
-            database.ref('whitelist').on('value', (snapshot) => {
-                whitelist = snapshot.val() || {};
-                updateWhitelistDisplay();
-                updateStats();
-                
-                // Check if current user has whitelist (for non-admin users)
-                if (currentUserRole !== 'admin' && currentUserId) {
-                    userHasWhitelist = !!whitelist[currentUserId];
-                    setupPermissions();
-                }
-            });
-        }
-        
-        // Monitor Servers
-        function monitorServers() {
-            database.ref('servers').on('value', (snapshot) => {
-                servers = snapshot.val() || {};
-                updateServerTable();
-                updateServerSelect();
-                showToast("Servidores atualizados", "success");
-            });
-        }
-        
-        // Update Server Select dropdown
-        function updateServerSelect() {
-            const serverSelect = document.getElementById('serverSelect');
-            if (!serverSelect) return;
-            
-            const currentSelection = serverSelect.value;
-            
-            // Clear dropdown
-            serverSelect.innerHTML = '<option value="">Selecione um servidor</option>';
-            
-            // Add online servers to dropdown
-            for (const [serverId, server] of Object.entries(servers)) {
-                if (!server) continue;
-                
-                const timeDiff = Date.now() - (server.lastActive || 0);
-                const isOnline = timeDiff < 15000;
-                
-                if (isOnline) {
-                    const option = document.createElement('option');
-                    option.value = serverId;
-                    option.textContent = `${serverId.substring(0, 8)}... (${server.players || 0}/${server.maxPlayers || 0})`;
-                    serverSelect.appendChild(option);
-                }
-            }
-            
-            // Restore selection
-            if (currentSelection) {
-                serverSelect.value = currentSelection;
-            }
-        }
-        
-        // Update Server Table
-        function updateServerTable() {
-            const serverList = document.getElementById('serverList');
-            const recentServerList = document.getElementById('recentServerList');
-            const allServerList = document.getElementById('allServerList');
-            
-            // Clear tables
-            if (serverList) serverList.innerHTML = '';
-            if (recentServerList) recentServerList.innerHTML = '';
-            if (allServerList) allServerList.innerHTML = '';
-            
-            const now = Date.now();
-            let activeCount = 0;
-            let totalPlayers = 0;
-            
-            // Process all servers
-            for (const [id, server] of Object.entries(servers)) {
-                if (!server) continue;
-                
-                const timeDiff = now - (server.lastActive || 0);
-                const isOnline = timeDiff < 15000;
-                const isRecent = timeDiff < 300000;
-                
-                // Count stats
-                if (isOnline) {
-                    activeCount++;
-                    totalPlayers += server.players || 0;
-                }
-                
-                // Create row data
-                const rowData = createServerRow(id, server, timeDiff, isOnline);
-                
-                // Add to appropriate tables
-                if (isOnline && serverList) {
-                    serverList.innerHTML += rowData;
-                }
-                
-                if (isRecent && !isOnline && recentServerList) {
-                    recentServerList.innerHTML += rowData;
-                }
-                
-                if (allServerList) {
-                    allServerList.innerHTML += rowData;
-                }
-            }
-            
-            // Handle empty tables
-            if (serverList) handleEmptyTable(serverList, 'online', 4);
-            if (recentServerList) handleEmptyTable(recentServerList, 'recent', 5);
-            if (allServerList) handleEmptyTable(allServerList, 'all', 5);
-            
-            // Update stats
-            const activeServersCount = document.getElementById('activeServersCount');
-            const totalPlayersCount = document.getElementById('totalPlayersCount');
-            const whitelistCount = document.getElementById('whitelistCount');
-            
-            if (activeServersCount) activeServersCount.textContent = activeCount;
-            if (totalPlayersCount) totalPlayersCount.textContent = totalPlayers;
-            if (whitelistCount) whitelistCount.textContent = Object.keys(whitelist).length;
-        }
-        
-        // Create server row HTML
-        function createServerRow(id, server, timeDiff, isOnline) {
-            const placeId = server.placeId || '0';
-            const gamePageUrl = `https://www.roblox.com/games/${placeId}`;
-            
-            const date = new Date(server.lastActive || Date.now());
-            const dateStr = date.toLocaleDateString('pt-BR');
-            const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            
-            const lastActivityCell = currentTab === 'online' ? '' : `
-                <td>
-                    <div style="font-size: 13px; line-height: 1.4;">
-                        <div>${dateStr}</div>
-                        <div style="color: var(--text-lighter);">${timeStr}</div>
-                    </div>
-                </td>
-            `;
-            
-            const rowClass = selectedServerId === id ? 'selected' : '';
-            
-            return `
-                <tr class="${rowClass}" onclick="selectServer('${id}')">
-                    <td>
-                        <div class="server-info">
-                            <img src="${server.thumbnail || 'https://www.roblox.com/asset-thumbnail/image?assetId=0&width=420&height=420&format=png'}" 
-                                 class="server-icon" 
-                                 alt="${server.gameName || 'Jogo Roblox'}"
-                                 onerror="this.src='https://www.roblox.com/asset-thumbnail/image?assetId=0&width=420&height=420&format=png'">
-                            <div class="server-details">
-                                <div class="server-name">
-                                    <i class="fas fa-gamepad" style="font-size: 14px;"></i>
-                                    ${server.gameName || 'Jogo Desconhecido'}
-                                </div>
-                                <div class="server-id">${id}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="player-count">
-                            <i class="fas fa-users"></i>
-                            ${server.players || 0}/${server.maxPlayers || 0}
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
-                            <i class="fas fa-${isOnline ? 'circle' : 'clock'}"></i>
-                            ${isOnline ? 'Online' : 'Offline'}
-                        </span>
-                    </td>
-                    ${lastActivityCell}
-                    <td>
-                        <div class="server-actions">
-                            <button class="action-button select" onclick="event.stopPropagation(); selectServer('${id}')">
-                                <i class="fas fa-terminal"></i> SELECIONAR
-                            </button>
-                            <a href="${gamePageUrl}" class="action-button enter" onclick="event.stopPropagation();" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> ENTRAR
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-        
-        // Handle empty tables
-        function handleEmptyTable(table, type, colspan) {
-            if (table.children.length === 0) {
-                let message = '';
-                let icon = 'server';
-                
-                switch(type) {
-                    case 'online':
-                        message = 'Nenhum servidor online';
-                        icon = 'wifi-slash';
-                        break;
-                    case 'recent':
-                        message = 'Nenhum servidor recente';
-                        icon = 'history';
-                        break;
-                    case 'all':
-                        message = 'Nenhum servidor';
-                        icon = 'server';
-                        break;
-                }
-                
-                table.innerHTML = `
-                    <tr>
-                        <td colspan="${colspan}" style="text-align:center; padding: 60px 20px; color: var(--text-light);">
-                            <i class="fas fa-${icon}" style="font-size: 48px; margin-bottom: 20px; display: block; opacity: 0.2;"></i>
-                            <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px;">${message}</div>
-                            <div style="font-size: 14px; opacity: 0.6;">Aguarde novos servidores se conectarem</div>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-        
-        // Select Server
-        function selectServer(serverId) {
-            selectedServerId = serverId;
-            const serverSelect = document.getElementById('serverSelect');
-            
-            if (serverSelect) {
-                serverSelect.value = serverId;
-            }
-            
-            document.querySelectorAll('.server-table tr').forEach(row => {
-                row.classList.remove('selected');
-            });
-            
-            const rows = document.querySelectorAll('.server-table tr');
-            for (let row of rows) {
-                if (row.innerHTML.includes(serverId)) {
-                    row.classList.add('selected');
-                    break;
-                }
-            }
-            
-            showToast(`Servidor selecionado`, "success");
-        }
-        
-        // Update Whitelist Display
-        function updateWhitelistDisplay() {
-            const whitelistList = document.getElementById('whitelistList');
-            if (!whitelistList) return;
-            
-            whitelistList.innerHTML = '';
-            
-            const sortedWhitelist = Object.entries(whitelist)
-                .sort((a, b) => (b[1]?.addedAt || 0) - (a[1]?.addedAt || 0));
-            
-            sortedWhitelist.forEach(([userId, data]) => {
-                const item = document.createElement('div');
-                item.className = 'whitelist-item';
-                
-                const dateAdded = data?.addedAt ? new Date(data.addedAt).toLocaleDateString('pt-BR') : 'Data desconhecida';
-                const timeAdded = data?.addedAt ? new Date(data.addedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-                const username = data?.username || `User${userId.substring(0, 6)}`;
-                
-                item.innerHTML = `
-                    <div class="whitelist-info">
-                        <div class="whitelist-id">
-                            <i class="fas fa-user-check" style="margin-right: 8px;"></i>
-                            ${userId} (${username})
-                        </div>
-                        <div class="whitelist-date">Adicionado em ${dateAdded} às ${timeAdded}</div>
-                        ${data?.addedBy ? `<div class="whitelist-date" style="font-size: 12px; color: var(--text-lighter);">Por: ${data.addedBy}</div>` : ''}
-                    </div>
-                    <button class="remove-button" id="removeBtn_${userId}" onclick="removeFromWhitelist('${userId}')" ${currentUserRole !== 'admin' ? 'disabled' : ''}>
-                        <i class="fas fa-times"></i> REMOVER
-                    </button>
-                `;
-                
-                whitelistList.appendChild(item);
-            });
-            
-            if (sortedWhitelist.length === 0) {
-                whitelistList.innerHTML = `
-                    <div style="text-align: center; padding: 60px 20px; color: var(--text-light);">
-                        <i class="fas fa-users-slash" style="font-size: 48px; margin-bottom: 20px; display: block; opacity: 0.2;"></i>
-                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px;">Nenhum jogador na whitelist</div>
-                        <div style="font-size: 14px; opacity: 0.6;">
-                            ${currentUserRole === 'admin' ? 'Adicione jogadores usando o campo acima' : 'Apenas administradores podem adicionar'}
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        // Update Stats
-        function updateStats() {
-            let activeCount = 0;
-            let totalPlayers = 0;
-            
-            for (const [id, server] of Object.entries(servers)) {
-                if (!server) continue;
-                
-                const timeDiff = Date.now() - (server.lastActive || 0);
-                const isOnline = timeDiff < 15000;
-                
-                if (isOnline) {
-                    activeCount++;
-                    totalPlayers += server.players || 0;
-                }
-            }
-            
-            const activeServersCount = document.getElementById('activeServersCount');
-            const totalPlayersCount = document.getElementById('totalPlayersCount');
-            const whitelistCount = document.getElementById('whitelistCount');
-            
-            if (activeServersCount) activeServersCount.textContent = activeCount;
-            if (totalPlayersCount) totalPlayersCount.textContent = totalPlayers;
-            if (whitelistCount) whitelistCount.textContent = Object.keys(whitelist).length;
-        }
-        
-        // Add to Whitelist (Admin only)
-        function addToWhitelist() {
-            if (currentUserRole !== 'admin') {
-                showToast("Apenas @fr_zkn pode adicionar à whitelist", "error");
-                return;
-            }
-            
-            const input = document.getElementById('whitelistInput');
-            if (!input) return;
-            
-            const userId = input.value.trim();
-            
-            if (!userId) {
-                showToast("Digite o UserID do jogador", "warning");
-                input.focus();
-                return;
-            }
-            
-            if (isNaN(userId)) {
-                showToast("O UserID deve ser um número", "warning");
-                input.focus();
-                return;
-            }
-            
-            if (whitelist[userId]) {
-                showToast("Este jogador já está na whitelist", "warning");
-                input.focus();
-                return;
-            }
-            
-            // Fetch Roblox username (simulated - in production you'd use Roblox API)
-            fetchRobloxUsername(userId)
-                .then(username => {
-                    const playerData = {
-                        userId: userId,
-                        username: username,
-                        addedAt: Date.now(),
-                        addedBy: currentUserRole === 'admin' ? "Administrador" : "VIP",
-                        role: "vip"
-                    };
-                    
-                    database.ref('whitelist/' + userId).set(playerData)
-                        .then(() => {
-                            showToast(`Jogador ${username} (${userId}) adicionado à whitelist`, "success");
-                            input.value = '';
-                            input.focus();
-                            
-                            // Visual feedback
-                            const addBtn = document.getElementById('addWhitelistBtn');
-                            if (addBtn) {
-                                addBtn.innerHTML = '<i class="fas fa-check"></i> ADICIONADO';
-                                addBtn.style.background = 'var(--user-gradient)';
-                                
-                                setTimeout(() => {
-                                    addBtn.innerHTML = '<i class="fas fa-plus"></i> ADICIONAR';
-                                }, 2000);
-                            }
-                        })
-                        .catch((error) => {
-                            showToast(`Erro: ${error.message}`, "error");
-                        });
-                })
-                .catch(error => {
-                    // Fallback if username fetch fails
-                    const playerData = {
-                        userId: userId,
-                        username: `User${userId.substring(0, 6)}`,
-                        addedAt: Date.now(),
-                        addedBy: currentUserRole === 'admin' ? "Administrador" : "VIP",
-                        role: "vip"
-                    };
-                    
-                    database.ref('whitelist/' + userId).set(playerData)
-                        .then(() => {
-                            showToast(`Jogador ${userId} adicionado à whitelist`, "success");
-                            input.value = '';
-                            input.focus();
-                        })
-                        .catch((error) => {
-                            showToast(`Erro: ${error.message}`, "error");
-                        });
-                });
-        }
-        
-        // Simulated Roblox username fetch (replace with real API call)
-        function fetchRobloxUsername(userId) {
-            return new Promise((resolve, reject) => {
-                // In a real implementation, you would call Roblox API here
-                // For now, we'll simulate with a timeout
-                setTimeout(() => {
-                    resolve(`RobloxUser${userId.substring(0, 6)}`);
-                }, 500);
-            });
-        }
-        
-        // Remove from Whitelist (Admin only)
-        function removeFromWhitelist(userId) {
-            if (currentUserRole !== 'admin') {
-                showToast("Apenas @fr_zkn pode remover da whitelist", "error");
-                return;
-            }
-            
-            if (!confirm(`Remover jogador ${userId} da whitelist?`)) {
-                return;
-            }
-            
-            database.ref('whitelist/' + userId).remove()
-                .then(() => {
-                    showToast("Jogador removido da whitelist", "success");
-                })
-                .catch((error) => {
-                    showToast(`Erro: ${error.message}`, "error");
-                });
-        }
-        
-        // Send Execution (only for users with whitelist or admin)
-        function sendExecution() {
-            // Check permissions
-            if (currentUserRole !== 'admin' && !userHasWhitelist) {
-                showToast("Você precisa estar na whitelist para executar comandos", "error");
-                return;
-            }
-            
-            const serverSelect = document.getElementById('serverSelect');
-            const scriptBox = document.getElementById('scriptBox');
-            
-            if (!serverSelect || !scriptBox) return;
-            
-            const serverId = serverSelect.value;
-            const code = scriptBox.value;
-            
-            if (!serverId) {
-                showToast("Selecione um servidor primeiro", "warning");
-                return;
-            }
-            
-            if (!code.trim()) {
-                showToast("Digite algum código para executar", "warning");
-                return;
-            }
-            
-            const commandData = {
-                script: code,
-                timestamp: Date.now(),
-                executor: currentUserRole === 'admin' ? "Administrador" : `VIP (${currentUserId})`,
-                executorId: currentUserId,
-                role: currentUserRole
-            };
-            
-            database.ref('commands/' + serverId).set(commandData)
-                .then(() => {
-                    showToast("Comando enviado com sucesso", "success");
-                    
-                    // Visual feedback
-                    const executeBtn = document.querySelector('.execute-button');
-                    if (executeBtn) {
-                        executeBtn.innerHTML = '<i class="fas fa-check"></i> ENVIADO';
-                        executeBtn.style.background = 'var(--user-gradient)';
-                        
-                        setTimeout(() => {
-                            executeBtn.innerHTML = '<i class="fas fa-play"></i> EXECUTAR';
-                            executeBtn.style.background = 'var(--primary-gradient)';
-                        }, 2000);
-                    }
-                })
-                .catch((error) => {
-                    showToast(`Erro: ${error.message}`, "error");
-                });
-        }
-        
-        // Refresh Servers
-        function refreshServers() {
-            database.ref('servers').once('value')
-                .then(() => {
-                    showToast("Servidores atualizados", "success");
-                    
-                    // Visual feedback
-                    const refreshBtn = document.querySelector('.script-button.refresh');
-                    if (refreshBtn) {
-                        refreshBtn.innerHTML = '<i class="fas fa-check"></i> ATUALIZADO';
-                        
-                        setTimeout(() => {
-                            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> ATUALIZAR';
-                        }, 2000);
-                    }
-                });
-        }
-        
-        // Clear Script
-        function clearScript() {
-            const scriptBox = document.getElementById('scriptBox');
-            if (scriptBox) {
-                scriptBox.value = '';
-                scriptBox.focus();
-                showToast("Código limpo", "success");
-            }
-        }
-        
-        // Show Toast
-        function showToast(message, type) {
-            // Remove existing toasts
-            document.querySelectorAll('.toast').forEach(toast => {
-                toast.remove();
-            });
-            
-            // Create toast
+        const db = firebase.database();
+
+        let servers = {}, whitelist = {}, currentUserRole = null, currentUserId = null, currentTab = 'online', selectedServerId = null, userHasWhitelist = false;
+
+        const showToast = (msg, type) => {
+            const existing = document.querySelector('.toast');
+            if(existing) existing.remove();
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
-            let icon = 'info-circle';
-            if (type === 'success') icon = 'check-circle';
-            else if (type === 'warning') icon = 'exclamation-triangle';
-            else if (type === 'error') icon = 'exclamation-circle';
-            else if (type === 'info') icon = 'info-circle';
-            
-            toast.innerHTML = `
-                <i class="fas fa-${icon}"></i>
-                <div>${message}</div>
-            `;
-            
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i> ${msg}`;
             document.body.appendChild(toast);
-            
-            // Remove after 5 seconds
-            setTimeout(() => {
-                toast.style.animation = 'slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) reverse';
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        const fetchRobloxUsername = (id) => new Promise(resolve => setTimeout(() => resolve(`RobloxUser${id.substring(0,6)}`), 300));
+
+        const checkUserId = () => {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) return showToast("Digite um UserID", "warning");
+            if (userId === "ZKN9999") {
+                currentUserRole = 'admin'; currentUserId = "ADMIN"; userHasWhitelist = true;
+                document.getElementById('loginScreen').style.opacity = '0';
                 setTimeout(() => {
-                    if (toast.parentNode) {
-                        document.body.removeChild(toast);
-                    }
-                }, 500);
-            }, 5000);
-        }
-        
-        // Event Listeners
-        document.getElementById('userId').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkUserId();
-            }
-        });
-        
-        const whitelistInput = document.getElementById('whitelistInput');
-        if (whitelistInput) {
-            whitelistInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addToWhitelist();
-                }
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    setTimeout(() => document.getElementById('dashboard').classList.add('show'), 50);
+                    document.getElementById('userName').textContent = "Administrador";
+                    document.getElementById('userRoleBadge').className = 'user-role admin';
+                    document.getElementById('userRoleBadge').textContent = 'ADMIN';
+                    setupPermissions();
+                    loadWhitelist();
+                    monitorServers();
+                    showToast("Bem-vindo, Administrador!", "success");
+                }, 300);
+            } else if (!isNaN(userId)) {
+                db.ref('whitelist/' + userId).once('value').then(snap => {
+                    if (snap.exists()) {
+                        currentUserRole = 'user'; currentUserId = userId; userHasWhitelist = true;
+                        document.getElementById('loginScreen').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('loginScreen').style.display = 'none';
+                            document.getElementById('dashboard').style.display = 'block';
+                            setTimeout(() => document.getElementById('dashboard').classList.add('show'), 50);
+                            const name = snap.val()?.username || `User${userId.substring(0,6)}`;
+                            document.getElementById('userName').textContent = name;
+                            document.getElementById('userRoleBadge').className = 'user-role user';
+                            document.getElementById('userRoleBadge').textContent = 'VIP';
+                            setupPermissions();
+                            loadWhitelist();
+                            monitorServers();
+                            showToast(`Bem-vindo, ${name}!`, "success");
+                        }, 300);
+                    } else showToast("UserID não está na whitelist", "error");
+                });
+            } else showToast("UserID deve ser um número", "warning");
+        };
+
+        const logout = () => {
+            document.getElementById('dashboard').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+                setTimeout(() => document.getElementById('loginScreen').style.opacity = '1', 50);
+                document.getElementById('userId').value = '';
+                currentUserRole = null; currentUserId = null; userHasWhitelist = false;
+                showToast("Sessão encerrada", "info");
+            }, 300);
+        };
+
+        const setupPermissions = () => {
+            const isAdmin = currentUserRole === 'admin';
+            const hasPerm = isAdmin || userHasWhitelist;
+            document.getElementById('scriptBox').disabled = !hasPerm;
+            document.getElementById('executeBtn').disabled = !hasPerm;
+            document.getElementById('addWhitelistBtn').disabled = !isAdmin;
+            document.getElementById('whitelistInput').disabled = !isAdmin;
+            document.getElementById('executorPermissionText').innerHTML = hasPerm ? (isAdmin ? 'Execute scripts remotamente (Admin)' : 'Execute scripts remotamente (VIP)') : 'Acesso negado - Sem whitelist';
+            document.getElementById('executorPermissionText').style.color = hasPerm ? (isAdmin ? '#f59e0b' : '#10b981') : '#ef4444';
+            document.getElementById('whitelistPermissionText').innerHTML = isAdmin ? 'Controle de acesso premium (Admin)' : 'Acesso somente leitura';
+            document.getElementById('whitelistPermissionText').style.color = isAdmin ? '#f59e0b' : '#10b981';
+        };
+
+        const switchTab = (tabId) => {
+            currentTab = tabId;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabId + '-tab').classList.add('active');
+            updateServerTable();
+        };
+
+        const loadWhitelist = () => {
+            db.ref('whitelist').on('value', snap => {
+                whitelist = snap.val() || {};
+                updateWhitelistDisplay();
+                updateStats();
+                if (currentUserRole !== 'admin' && currentUserId) userHasWhitelist = !!whitelist[currentUserId];
+                setupPermissions();
             });
-        }
-        
-        // Initial connection status
-        database.ref('.info/connected').on('value', (snapshot) => {
-            const isConnected = snapshot.val();
-            const statusElement = document.getElementById('connectionStatus');
-            
-            if (statusElement) {
-                if (isConnected) {
-                    statusElement.textContent = 'Conectado';
-                    statusElement.style.color = 'var(--success-light)';
-                } else {
-                    statusElement.textContent = 'Desconectado';
-                    statusElement.style.color = 'var(--danger-light)';
-                    showToast("Conexão perdida", "error");
+        };
+
+        const monitorServers = () => db.ref('servers').on('value', snap => { servers = snap.val() || {}; updateServerTable(); updateServerSelect(); });
+
+        const updateServerSelect = () => {
+            const select = document.getElementById('serverSelect');
+            if (!select) return;
+            const current = select.value;
+            select.innerHTML = '<option value="">Selecione um servidor</option>';
+            for (const [id, srv] of Object.entries(servers)) {
+                if (srv && (Date.now() - (srv.lastActive || 0) < 15000)) {
+                    select.innerHTML += `<option value="${id}">${id.substring(0,8)}... (${srv.players||0}/${srv.maxPlayers||0})</option>`;
                 }
             }
-        });
-        
-        // Initialize particles on load
-        window.addEventListener('load', () => {
-            createParticles();
-        });
+            if (current) select.value = current;
+        };
+
+        const createRow = (id, srv, timeDiff, isOnline, showLastActive = true) => {
+            const placeId = srv?.placeId || '0';
+            const date = new Date(srv?.lastActive || Date.now());
+            return `<tr onclick="selectServer('${id}')" ${selectedServerId === id ? 'class="selected"' : ''}>
+                <td><div class="server-info"><img src="${srv?.thumbnail || 'https://www.roblox.com/asset-thumbnail/image?assetId=0&width=420&height=420&format=png'}" class="server-icon" onerror="this.src='https://www.roblox.com/asset-thumbnail/image?assetId=0&width=420&height=420&format=png'"><div><div class="server-name">${srv?.gameName || 'Jogo Desconhecido'}</div><div class="server-id">${id}</div></div></div></td>
+                <td class="player-count"><i class="fas fa-users"></i> ${srv?.players||0}/${srv?.maxPlayers||0}</td>
+                <td><span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}"><i class="fas fa-${isOnline ? 'circle' : 'clock'}"></i> ${isOnline ? 'Online' : 'Offline'}</span></td>
+                ${showLastActive ? `<td><div style="font-size:12px">${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div></td>` : ''}
+                <td><div style="display:flex;gap:8px;"><button class="action-button" onclick="event.stopPropagation();selectServer('${id}')"><i class="fas fa-terminal"></i> SELECIONAR</button><a href="https://www.roblox.com/games/${placeId}" class="action-button" onclick="event.stopPropagation();" target="_blank"><i class="fas fa-external-link-alt"></i> ENTRAR</a></div></td>
+            </tr>`;
+        };
+
+        const updateServerTable = () => {
+            const now = Date.now();
+            let activeCount = 0, totalPlayers = 0;
+            const lists = { online: [], recent: [], all: [] };
+            for (const [id, srv] of Object.entries(servers)) {
+                if (!srv) continue;
+                const timeDiff = now - (srv.lastActive || 0);
+                const isOnline = timeDiff < 15000;
+                const isRecent = timeDiff < 300000;
+                if (isOnline) { activeCount++; totalPlayers += srv.players || 0; }
+                if (isOnline) lists.online.push(createRow(id, srv, timeDiff, true, false));
+                if (isRecent && !isOnline) lists.recent.push(createRow(id, srv, timeDiff, false, true));
+                lists.all.push(createRow(id, srv, timeDiff, isOnline, true));
+            }
+            for (const [tab, list] of Object.entries(lists)) {
+                const container = document.getElementById(`${tab}ServerList`);
+                if (container) container.innerHTML = list.length ? list.join('') : `<tr><td colspan="${tab === 'online' ? 4 : 5}" class="empty-state"><i class="fas fa-${tab === 'online' ? 'wifi-slash' : tab === 'recent' ? 'history' : 'server'}"></i><div>Nenhum servidor ${tab === 'online' ? 'online' : tab === 'recent' ? 'recente' : 'encontrado'}</div></td></tr>`;
+            }
+            document.getElementById('activeServersCount').textContent = activeCount;
+            document.getElementById('totalPlayersCount').textContent = totalPlayers;
+            document.getElementById('whitelistCount').textContent = Object.keys(whitelist).length;
+        };
+
+        const selectServer = (id) => {
+            selectedServerId = id;
+            document.getElementById('serverSelect').value = id;
+            document.querySelectorAll('.server-table tr').forEach(r => r.classList.remove('selected'));
+            event?.target?.closest('tr')?.classList.add('selected');
+            showToast(`Servidor selecionado`, "success");
+        };
+
+        const updateWhitelistDisplay = () => {
+            const container = document.getElementById('whitelistList');
+            if (!container) return;
+            const sorted = Object.entries(whitelist).sort((a,b) => (b[1]?.addedAt||0) - (a[1]?.addedAt||0));
+            container.innerHTML = sorted.length ? sorted.map(([id, data]) => `
+                <div class="whitelist-item">
+                    <div><div class="whitelist-id"><i class="fas fa-user-check"></i> ${id} (${data?.username || `User${id.substring(0,6)}`})</div><div class="whitelist-date">Adicionado em ${new Date(data?.addedAt||Date.now()).toLocaleDateString('pt-BR')}</div></div>
+                    <button class="remove-button" onclick="removeFromWhitelist('${id}')" ${currentUserRole !== 'admin' ? 'disabled' : ''}><i class="fas fa-times"></i> REMOVER</button>
+                </div>
+            `).join('') : `<div class="empty-state"><i class="fas fa-users-slash"></i><div>Nenhum jogador na whitelist</div></div>`;
+        };
+
+        const addToWhitelist = async () => {
+            if (currentUserRole !== 'admin') return showToast("Apenas @fr_zkn pode adicionar", "error");
+            const userId = document.getElementById('whitelistInput').value.trim();
+            if (!userId) return showToast("Digite o UserID", "warning");
+            if (isNaN(userId)) return showToast("UserID deve ser um número", "warning");
+            if (whitelist[userId]) return showToast("Já está na whitelist", "warning");
+            const username = await fetchRobloxUsername(userId);
+            db.ref('whitelist/' + userId).set({ userId, username, addedAt: Date.now(), addedBy: "Administrador" }).then(() => {
+                showToast(`Jogador ${username} (${userId}) adicionado`, "success");
+                document.getElementById('whitelistInput').value = '';
+            });
+        };
+
+        const removeFromWhitelist = (userId) => {
+            if (currentUserRole !== 'admin') return showToast("Apenas @fr_zkn pode remover", "error");
+            if (!confirm(`Remover ${userId} da whitelist?`)) return;
+            db.ref('whitelist/' + userId).remove().then(() => showToast("Removido da whitelist", "success"));
+        };
+
+        const sendExecution = () => {
+            if (currentUserRole !== 'admin' && !userHasWhitelist) return showToast("Você precisa estar na whitelist", "error");
+            const serverId = document.getElementById('serverSelect').value;
+            const code = document.getElementById('scriptBox').value.trim();
+            if (!serverId) return showToast("Selecione um servidor", "warning");
+            if (!code) return showToast("Digite algum código", "warning");
+            db.ref('commands/' + serverId).set({ script: code, timestamp: Date.now(), executor: currentUserRole === 'admin' ? "Administrador" : `VIP (${currentUserId})` }).then(() => {
+                showToast("Comando enviado", "success");
+                const btn = document.querySelector('.execute-button');
+                if (btn) { btn.innerHTML = '<i class="fas fa-check"></i> ENVIADO'; setTimeout(() => btn.innerHTML = '<i class="fas fa-play"></i> EXECUTAR', 2000); }
+            }).catch(e => showToast("Erro ao enviar", "error"));
+        };
+
+        const refreshServers = () => { db.ref('servers').once('value').then(() => showToast("Servidores atualizados", "success")); };
+        const clearScript = () => { document.getElementById('scriptBox').value = ''; showToast("Código limpo", "success"); };
+        const updateStats = () => {
+            let active = 0, players = 0;
+            for (const srv of Object.values(servers)) {
+                if (srv && (Date.now() - (srv.lastActive || 0) < 15000)) { active++; players += srv.players || 0; }
+            }
+            document.getElementById('activeServersCount').textContent = active;
+            document.getElementById('totalPlayersCount').textContent = players;
+            document.getElementById('whitelistCount').textContent = Object.keys(whitelist).length;
+        };
+
+        document.getElementById('userId').addEventListener('keypress', e => { if (e.key === 'Enter') checkUserId(); });
+        document.getElementById('whitelistInput').addEventListener('keypress', e => { if (e.key === 'Enter') addToWhitelist(); });
+        db.ref('.info/connected').on('value', snap => { document.getElementById('connectionStatus')?.remove(); });
     </script>
 </body>
 </html>
