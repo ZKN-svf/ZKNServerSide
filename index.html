@@ -5,168 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Para Emilly</title>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body { 
+    height: 100vh; 
+    background: #f3efe5; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-family: 'Inter', -apple-system, sans-serif; 
+    overflow: hidden; 
+    position: fixed; 
+    width: 100%; 
   }
 
-  body {
-    height: 100vh;
-    background: #f3efe5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Inter', -apple-system, sans-serif;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
+  .container { 
+    position: relative; 
+    width: 100%; 
+    max-width: 350px; 
+    height: 100vh; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
   }
 
-  .container {
-    position: relative;
-    width: 100%;
-    max-width: 350px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  .envelope-wrapper { 
+    position: relative; 
+    width: 280px; 
+    height: 180px; 
+    background: #ffffff; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+    cursor: pointer; 
+    z-index: 50; 
+    transition: transform 0.7s ease-in-out; 
+  }
+  
+  .envelope-wrapper.open { transform: translateY(150px); }
+  
+  .envelope-wrapper::before { 
+    content: ""; 
+    position: absolute; 
+    top: 0; 
+    z-index: 55; 
+    border-top: 90px solid #f9f6f0; 
+    border-left: 140px solid transparent; 
+    border-right: 140px solid transparent; 
+    transform-origin: top; 
+    transition: transform 0.5s ease; 
+  }
+  
+  .envelope-wrapper.open::before { transform: rotateX(180deg); z-index: 0; }
+  
+  .envelope-wrapper::after { 
+    content: ""; 
+    position: absolute; 
+    top: 0; 
+    width: 0; 
+    height: 0; 
+    border-top: 90px solid transparent; 
+    border-left: 140px solid #ffffff; 
+    border-right: 140px solid #ffffff; 
+    border-bottom: 90px solid #ffffff; 
+    z-index: 54; 
   }
 
-  .envelope-wrapper {
-    position: relative;
-    width: 280px;
-    height: 180px;
-    background: #ffffff;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    cursor: pointer;
-    z-index: 20;
-    transition: transform 0.7s ease-in-out;
+  .card { 
+    position: absolute; 
+    width: 260px; 
+    max-height: 65vh; 
+    background: #ffffff; 
+    border-radius: 12px; 
+    padding: 1.8rem 1.2rem; 
+    box-shadow: 0 5px 25px rgba(0,0,0,0.1); 
+    z-index: 10; 
+    opacity: 0; 
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    overflow-y: auto; 
+    visibility: hidden; 
+    pointer-events: none; 
   }
 
-  .envelope-wrapper.open {
-    transform: translateY(120px);
+  .envelope-wrapper.open + .card { 
+    opacity: 1; 
+    visibility: visible; 
+    transform: translateY(-160px); 
+    z-index: 60; 
+    pointer-events: all; 
   }
 
-  .envelope-wrapper::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    z-index: 25;
-    border-top: 90px solid #f9f6f0;
-    border-left: 140px solid transparent;
-    border-right: 140px solid transparent;
-    transform-origin: top;
-    transition: transform 0.5s ease;
-  }
-
-  .envelope-wrapper.open::before {
-    transform: rotateX(180deg);
-    z-index: 0;
-  }
-
-  .envelope-wrapper::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 0;
-    height: 0;
-    border-top: 90px solid transparent;
-    border-left: 140px solid #ffffff;
-    border-right: 140px solid #ffffff;
-    border-bottom: 90px solid #ffffff;
-    z-index: 24;
-  }
-
-  .card {
-    position: absolute;
-    width: 260px;
-    max-height: 60vh;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    z-index: 10;
-    opacity: 0;
-    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    overflow-y: auto;
-    visibility: hidden;
-  }
-
-  .envelope-wrapper.open + .card {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(-160px);
-    z-index: 30;
-  }
-
-  .greeting {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #b87c4f;
-    margin-bottom: 0.8rem;
-    text-transform: uppercase;
-    border-left: 3px solid #e4d5c0;
-    padding-left: 0.5rem;
-  }
-
-  .message p {
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: #2c2b28;
-    margin-bottom: 0.8rem;
-  }
-
-  .highlight {
-    background: #faf7f0;
-    padding: 0.8rem;
-    border-radius: 10px;
-    margin: 1rem 0;
-    font-size: 0.85rem;
-    color: #4b3b2c;
-    border: 1px solid #efe5d9;
-  }
-
-  .signature {
-    margin-top: 1rem;
-    text-align: right;
-    font-weight: 600;
-    color: #a57c5c;
-    border-top: 1px solid #f0e9e0;
-    padding-top: 0.8rem;
-    font-size: 0.85rem;
-  }
-
-  .final-line {
-    margin-top: 1.2rem;
-    text-align: center;
-    font-size: 0.75rem;
-    color: #b28254;
-    background: #fefaf5;
-    padding: 0.6rem;
-    border-radius: 15px;
-    border: 1px solid #f0e5da;
-  }
-
-  .hint {
-    position: absolute;
-    bottom: -30px;
-    width: 100%;
-    text-align: center;
-    font-size: 0.7rem;
-    color: #a57c5c;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+  .greeting { font-size: 0.8rem; font-weight: 700; color: #b87c4f; margin-bottom: 1rem; text-transform: uppercase; border-left: 3px solid #e4d5c0; padding-left: 0.6rem; }
+  .message p { font-size: 0.92rem; line-height: 1.6; color: #2c2b28; margin-bottom: 0.8rem; }
+  .highlight { background: #faf7f0; padding: 1rem; border-radius: 10px; margin: 1.2rem 0; font-size: 0.88rem; color: #4b3b2c; border: 1px solid #efe5d9; }
+  .signature { margin-top: 1rem; text-align: right; font-weight: 600; color: #a57c5c; border-top: 1px solid #f0e9e0; padding-top: 0.8rem; font-size: 0.85rem; }
+  .final-line { margin-top: 1.5rem; text-align: center; font-size: 0.78rem; color: #b28254; background: #fefaf5; padding: 0.8rem; border-radius: 20px; border: 1px solid #f0e5da; }
+  .hint { position: absolute; bottom: -35px; width: 100%; text-align: center; font-size: 0.7rem; color: #a57c5c; text-transform: uppercase; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 
+<audio id="musica" loop>
+  <source src="https://cdn.discordapp.com/attachments/1490177260173660201/1493660953135419493/I_Love_You_So_-_Instrumental_spotdown.org.mp3?ex=69dfc7aa&is=69de762a&hm=0bce8ddbe9f002d2a253f7708d3ff53af2e2fa34d163707d0a19e0982953cc18&" type="audio/mpeg">
+</audio>
+
 <div class="container">
   <div class="envelope-wrapper" id="envelope">
-    <div class="hint">Toque para abrir</div>
+    <div class="hint">Toque para abrir/fechar</div>
   </div>
 
   <div class="card">
@@ -177,21 +120,27 @@
       <p>Você foi — e ainda é — uma parte importante da minha história. Não daquele jeito paia… mas de um jeito real. Daqueles que marcam.</p>
       <p>Eu ainda lembro de como tudo parecia simples em certos momentos, e como, mesmo quando não tava perfeito, ainda tinha algo ali que valia.</p>
       <p>Independente de qualquer coisa, eu só quero que você fique bem. De verdade. Que você seja feliz do seu jeito, no seu tempo.</p>
-      <div class="highlight">
-        Espero que esse novo ciclo te traga paz, leveza, e coisas boas que façam sentido pra você.
-      </div>
+      <div class="highlight">Espero que esse novo ciclo te traga paz, leveza, e coisas boas que façam sentido pra você.</div>
       <p>E sim… mesmo depois de tudo, eu ainda torço por você.</p>
       <div class="signature">— ZKN</div>
-      <div class="final-line">
-        Pensou que eu ia esquecer do seu aniversário peste? Vontade de te dar 6 tapas 😋
-      </div>
+      <div class="final-line">Pensou que eu ia esquecer do seu aniversário peste? Vontade de te dar 6 tapas 😋</div>
     </div>
   </div>
 </div>
 
 <script>
   const env = document.getElementById('envelope');
+  const som = document.getElementById('musica');
+  let musicStarted = false;
+
   env.addEventListener('click', () => {
+    // Liga a música no primeiro toque e nunca mais desliga
+    if (!musicStarted) {
+      som.play().catch(e => console.log("Erro ao iniciar áudio"));
+      musicStarted = true;
+    }
+    
+    // Alterna a abertura do envelope
     env.classList.toggle('open');
   });
 </script>
