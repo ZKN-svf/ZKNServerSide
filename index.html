@@ -1,265 +1,200 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Para o seu aniversário</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Para Emilly</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-        body {
-            min-height: 100vh;
-            background: linear-gradient(145deg, #e8dccc 0%, #d6c8a8 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', 'Georgia', 'Times New Roman', serif;
-            padding: 20px;
-            position: relative;
-        }
+  body {
+    height: 100vh;
+    background: #f3efe5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
 
-        .card-container {
-            max-width: 700px;
-            width: 100%;
-            cursor: pointer;
-            perspective: 1200px;
-        }
+  .container {
+    position: relative;
+    width: 100%;
+    max-width: 350px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 
-        .envelope {
-            background: #fef7e0;
-            border-radius: 16px;
-            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 245, 200, 0.6);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
+  .envelope-wrapper {
+    position: relative;
+    width: 280px;
+    height: 180px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    cursor: pointer;
+    z-index: 20;
+    transition: transform 0.7s ease-in-out;
+  }
 
-        .seal {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: #c2a15b;
-            border-radius: 50%;
-            opacity: 0.7;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            z-index: 5;
-            pointer-events: none;
-        }
+  .envelope-wrapper.open {
+    transform: translateY(120px);
+  }
 
-        .seal::after {
-            content: "✧";
-            font-size: 32px;
-            color: #f9eec1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            font-weight: normal;
-        }
+  .envelope-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    z-index: 25;
+    border-top: 90px solid #f9f6f0;
+    border-left: 140px solid transparent;
+    border-right: 140px solid transparent;
+    transform-origin: top;
+    transition: transform 0.5s ease;
+  }
 
-        .invite-text {
-            padding: 70px 30px 80px 30px;
-            text-align: center;
-            background: #fdf8ed;
-            border-radius: 16px;
-            transition: all 0.2s;
-        }
+  .envelope-wrapper.open::before {
+    transform: rotateX(180deg);
+    z-index: 0;
+  }
 
-        .invite-text p {
-            font-size: 1.5rem;
-            letter-spacing: 1px;
-            color: #7a5a3a;
-            font-style: italic;
-            border-bottom: 1px dashed #e2cf9a;
-            display: inline-block;
-            padding-bottom: 8px;
-            margin-bottom: 25px;
-        }
+  .envelope-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-top: 90px solid transparent;
+    border-left: 140px solid #ffffff;
+    border-right: 140px solid #ffffff;
+    border-bottom: 90px solid #ffffff;
+    z-index: 24;
+  }
 
-        .invite-text span {
-            font-size: 2.2rem;
-            display: block;
-            color: #b48c48;
-            font-weight: 300;
-        }
+  .card {
+    position: absolute;
+    width: 260px;
+    max-height: 60vh;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    z-index: 10;
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow-y: auto;
+    visibility: hidden;
+  }
 
-        .click-hint {
-            margin-top: 35px;
-            font-size: 0.85rem;
-            color: #b49b6a;
-            font-family: monospace;
-            opacity: 0.7;
-        }
+  .envelope-wrapper.open + .card {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-160px);
+    z-index: 30;
+  }
 
-        .letter-content {
-            background: #fffef7;
-            border-radius: 20px;
-            padding: 40px 32px 52px 32px;
-            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
-            line-height: 1.65;
-            color: #2c2b26;
-            font-size: 1.05rem;
-            transition: all 0.4s ease;
-            transform: scale(0.97);
-            opacity: 0;
-            visibility: hidden;
-            position: relative;
-            z-index: 10;
-            border: 1px solid #efE3c3;
-        }
+  .greeting {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #b87c4f;
+    margin-bottom: 0.8rem;
+    text-transform: uppercase;
+    border-left: 3px solid #e4d5c0;
+    padding-left: 0.5rem;
+  }
 
-        .letter-content.visible {
-            transform: scale(1);
-            opacity: 1;
-            visibility: visible;
-        }
+  .message p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #2c2b28;
+    margin-bottom: 0.8rem;
+  }
 
-        .envelope.hidden-envelope {
-            display: none;
-        }
+  .highlight {
+    background: #faf7f0;
+    padding: 0.8rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: #4b3b2c;
+    border: 1px solid #efe5d9;
+  }
 
-        .message-block {
-            font-family: 'Georgia', 'Times New Roman', serif;
-        }
+  .signature {
+    margin-top: 1rem;
+    text-align: right;
+    font-weight: 600;
+    color: #a57c5c;
+    border-top: 1px solid #f0e9e0;
+    padding-top: 0.8rem;
+    font-size: 0.85rem;
+  }
 
-        .greeting {
-            font-size: 1.3rem;
-            font-weight: 500;
-            margin-bottom: 28px;
-            color: #b17e45;
-            letter-spacing: -0.2px;
-            border-left: 4px solid #dabb84;
-            padding-left: 20px;
-        }
+  .final-line {
+    margin-top: 1.2rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #b28254;
+    background: #fefaf5;
+    padding: 0.6rem;
+    border-radius: 15px;
+    border: 1px solid #f0e5da;
+  }
 
-        .main-phrase {
-            margin-bottom: 28px;
-            text-align: left;
-        }
-
-        .main-phrase p {
-            margin-bottom: 1.2rem;
-        }
-
-        .wish-line {
-            margin: 28px 0 24px 0;
-            font-style: normal;
-            background: #faf5e6;
-            padding: 18px 22px;
-            border-radius: 24px;
-            color: #4f3e28;
-        }
-
-        .signature {
-            margin-top: 38px;
-            text-align: right;
-            font-size: 1rem;
-            border-top: 1px solid #ece1ca;
-            padding-top: 24px;
-            font-style: normal;
-            letter-spacing: 0.3px;
-        }
-
-        .care-tip {
-            font-size: 0.9rem;
-            color: #8f7652;
-            margin-top: 18px;
-            text-align: right;
-        }
-
-        @media (max-width: 550px) {
-            .letter-content {
-                padding: 30px 20px 42px 20px;
-            }
-            .greeting {
-                font-size: 1.15rem;
-                padding-left: 14px;
-            }
-            .main-phrase p {
-                font-size: 1rem;
-            }
-            .wish-line {
-                padding: 14px 18px;
-            }
-        }
-
-        button, .back-button {
-            display: none;
-        }
-
-        .no-back {
-            user-select: none;
-        }
-
-        footer {
-            display: none;
-        }
-    </style>
+  .hint {
+    position: absolute;
+    bottom: -30px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #a57c5c;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
 </head>
 <body>
 
-<div class="card-container" id="cardContainer">
-    <div class="envelope" id="envelope">
-        <div class="seal"></div>
-        <div class="invite-text">
-            <p>✨ uma carta ✨</p>
-            <span>Clique para abrir</span>
-            <div class="click-hint">Toque ou clique</div>
-        </div>
+<div class="container">
+  <div class="envelope-wrapper" id="envelope">
+    <div class="hint">Toque para abrir</div>
+  </div>
+
+  <div class="card">
+    <div class="greeting">Emilly,</div>
+    <div class="message">
+      <p>Hoje é o seu dia… e eu poderia só falar “feliz aniversário” como todo mundo, mas você não é “todo mundo”.</p>
+      <p>A verdade é que, mesmo com o tempo passando, algumas coisas simplesmente não mudam. Tipo as memórias que ficaram… os momentos, as conversas, as risadas, até as fases estranhas que só a gente entende.</p>
+      <p>Você foi — e ainda é — uma parte importante da minha história. Não daquele jeito paia… mas de um jeito real. Daqueles que marcam.</p>
+      <p>Eu ainda lembro de como tudo parecia simples em certos momentos, e como, mesmo quando não tava perfeito, ainda tinha algo ali que valia.</p>
+      <p>Independente de qualquer coisa, eu só quero que você fique bem. De verdade. Que você seja feliz do seu jeito, no seu tempo.</p>
+      <div class="highlight">
+        Espero que esse novo ciclo te traga paz, leveza, e coisas boas que façam sentido pra você.
+      </div>
+      <p>E sim… mesmo depois de tudo, eu ainda torço por você.</p>
+      <div class="signature">— ZKN</div>
+      <div class="final-line">
+        Pensou que eu ia esquecer do seu aniversário peste? Vontade de te dar 6 tapas 😋
+      </div>
     </div>
-
-    <div class="letter-content" id="letterContent">
-        <div class="message-block">
-            <div class="greeting">
-                Para você, no seu dia.
-            </div>
-
-            <div class="main-phrase">
-                <p>Hoje é o seu dia… e mesmo que o tempo tenha mudado algumas coisas, ainda existem sentimentos e memórias que continuam aqui, guardados de um jeito especial...</p>
-
-                <p>Quero te desejar um feliz aniversário de verdade, que sua vida seja leve, que você encontre paz nas coisas simples, que seus sonhos comecem a se alinhar e que você seja feliz do seu jeito, no seu tempo.. Você foi uma parte importante da minha história, e isso não se apaga. Independente de qualquer coisa, eu ainda estou aqui por você, ainda quero te ver bem, sorrindo, conquistando tudo que merece.</p>
-            </div>
-
-            <div class="wish-line">
-                Parabéns peste... Cuida de você, blz? 🖕🏻😋
-            </div>
-
-            <div class="signature">
-                — Com respeito e memória boa.
-            </div>
-            <div class="care-tip">
-                Que seu caminho seja leve.
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
 <script>
-    (function() {
-        const envelopeDiv = document.getElementById('envelope');
-        const letterDiv = document.getElementById('letterContent');
-        const container = document.getElementById('cardContainer');
-
-        function openLetter() {
-            if (!envelopeDiv || !letterDiv) return;
-            envelopeDiv.classList.add('hidden-envelope');
-            letterDiv.classList.add('visible');
-            if (container) container.style.cursor = 'default';
-        }
-
-        if (envelopeDiv) {
-            envelopeDiv.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openLetter();
-            });
-        }
-    })();
+  const env = document.getElementById('envelope');
+  env.addEventListener('click', () => {
+    env.classList.toggle('open');
+  });
 </script>
+
 </body>
 </html>
